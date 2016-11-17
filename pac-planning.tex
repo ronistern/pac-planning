@@ -8,9 +8,7 @@
 \frenchspacing \setlength{\pdfpagewidth}{8.5in}
 \setlength{\pdfpageheight}{11in}
 
-\pdfinfo{/Title (Data-and-Model Driven Classical Planning)
-
-/Author (Roni Stern, Brendan Juba)}
+%\pdfinfo{Title (Data-and-Model Driven Classical Planning)/Author (Roni Stern, Brendan Juba)}
 
 
 \setcounter{secnumdepth}{0}
@@ -76,13 +74,6 @@
 %/Title(To Reopen or Not to Reopen)
 %/Author(Submission #)}
 
-%\title{Suboptimal Variants of the Conflict-Based Search Algorithm for the Multi-Agent Pathfinding Problem}
-
-%\author{
-%Max Barer \institute{ISE Department, Ben-Gurion University, E-mail:\{max.barer,gunisharon,roni.stern,ariel.felner1\}@gmail.com}
-%\and Guni Sharon
-%\and Roni Stern
-%\and Ariel felner}
 
 
 
@@ -116,8 +107,61 @@ TBD
 
 
 \section{Introduction}
+In classical planning problems, a model of the acting agent and its relation to the relevant world is given in the form of some of planning description language, e.g., the classical STRIPS model~\cite{fikes1971strips} or PDDL~\cite{mcdermott1998pddl}. This model is used to generate a plan, e.g., that achives some given goal condition. In this paper we address the problem of generating such a plan in cases where no model of the world is given. Instead, the input to the problem includes a set of observed trajectories, e.g., a set of plans that the agent has executed succesfully in the past. 
+\[\ldots\]
 
-TBD
+In this paper we introduce a theoretical framework for learning a partial classical planning model from a given set of observed trajectories, and how to plan using these observed trajectoriesin a way that will ensure the goal is achieved. 
+
+
+
+\section{Problem Definition}
+The setting we address in this work is a STRIPS planning problem $\Pi=\langle P, A, I, G\rangle$, where $P$ is the set of predicates, $A$ is a set of actions, $I$ is the initial state, and $G$ is the goal condition. We assume here that states in the world as well as the goal condition are defined as a conjunction of predicates from $P$. 
+
+In the planning problem we deal with in this paper, which we refer to as {\em model-free planning}, we do not know the capabilities of the action agent directly. Instead, we are given a set of {\em trajectories}. 
+\begin{definition}[Trajectory]
+A trajectory $T=\langle s_1, a_1, s_2, a_2, \ldots, a_{n-1}, s_n\rangle$ is an alternating sequence of states ($s_1,\ldots,s_n$) and actions ($a_1,\ldots,a_n$) that starts and ends with a state. 
+\end{definition}
+The model-free planning problem is defined as follows.
+\begin{definition}[Model-free planning]
+The model-free planning problem is defined by the tuple $\rangle P,I,G, \mathcal{T}\rangle$, 
+where $P$, $I$, and $G$ are the predicates, initial state, and goal condition, and $\mathcal{T}$ is a set of trajectories. The task is to generate plan that will achieve $G$, i.e., a sequence of action that, if applied to $I$, and results in a state that satisfies $G$.
+\end{definition}
+
+\section{Learning a Conservative Model}
+We propose a conservative approach to solve the model-free planning problem
+that first learns a partial model from the given trajectories and then uses conformant planning
+to generate a plan that is guaranteed to reach the goal. 
+
+
+From the set of observed trajectories ($\mathcal{T}$), we extract the set of actions that were part of the observed trajectories, denoted by $A(\mathcal{T})$. Formally,
+\[ A(\mathcal{T})=\{a | \exists T\in\mathcal{T} \text{~such that~} a\in T\} \]
+Next, we generate for action $a\in A(\mathcal{T})$ a set of preconditions and effects, by considering the states that were before and after $a$ in the trajectories where it appears. 
+Let $T(a)$ be the set of trajectories in $\mathcal{T}$ in which $a$ appeared, i.e., 
+\[ T(a)=\{T | T\in \mathcal{T} \text{~and~} a\in T\} \]
+We define the preconditions and effects of $a$, denoted $pre(a)$ and $eff(a)$, respectively, as follow:
+\begin{itemize}
+    \item {\bf Preconditions.} The intersection of predicates that were true in all the state that preceded $a$ in the given trajectories $\mathcal{T}$. 
+    \item {\bf Effects.} The difference, predicates, between states immediately before $a$ and states immediately after $a$. 
+\end{itemize}
+
+The effects are, of course, the real effects of $a$. However, the preconditions are a superset of the preconditions of $a$. Thus, every plan generated with these actions is a valid plan in the real model, but we might not find a plan we can generate even though such exists. 
+
+MAYBE TALK ABOUT COSTS (E.G., ALL POSSIBLE SOLUTIONS TO A LINEAR EQUATION, IF WE HAVE THE COSTS OF THE TRAJECTORIES)
+% hich learns from the observed trajectories a partial model that is ``safe'' to use in planning.  This results in a model that can generate a subset of the plans that the original, unknown, model can generate, but the generated plan are guaranteed to be applicable. 
+
+
+%\section{Model-Free Planning as Conformant Planning}
+%HERE WE'LL TALK ABOUT HOW THE ABOVE COMPILES TO CONFORMANT PLANNING,SO WE CAN JUST RUN A SUITABLE PLANNING. ALSO, SOME OF THESE PLANNERS JUST COMPILE TO CLASSICAL PLANNERS, SO THAT'S EVEN BETTER. 
+
+
+\section{Thoeretical Guarantees and Limitations}
+
+
+
+How many trajectories do we need to guarantee that every plan can be generated?
+
+
+
 
 
 \newpage
