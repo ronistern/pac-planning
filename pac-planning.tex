@@ -1,0 +1,129 @@
+\def\year{2016}\relax
+%File: formatting-instruction.tex
+\documentclass[letterpaper]{article}
+\usepackage{aaai16}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\frenchspacing \setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+
+\pdfinfo{/Title (Learning a Classical Planning Model)
+
+/Author (Roni Stern, Brendan Juba)}
+
+
+\setcounter{secnumdepth}{0}
+
+
+
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{psfig}
+\usepackage{subcaption}
+\usepackage{tabularx}
+
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\newtheorem{definition}{Definition}
+
+%\nocopyright
+
+\newcommand{\comment}[1]{}
+
+\newcommand{\OPEN} {{\textsc{Open}}}
+
+% This is for the agmin
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+
+
+\newcommand{\ch}[1]
+{{\color{red} #1}}
+
+\newcommand{\qed}{\hfill\ensuremath{\blacksquare}}
+\newcommand{\astar}{A$^*$}
+\newcommand{\wastar}{WA$^*$}
+\newcommand{\arastar}{ARA$^*$}
+\newcommand{\pts}{PS}
+\newcommand{\dps}{DPS}
+\newcommand{\ees}{EES}
+\newcommand{\gbfs}{GBFS}
+\newcommand{\bees}{BEES}
+\newcommand{\beeps}{BEEPS}
+\newcommand{\bss}{BSS}
+\newcommand{\bssb}{BSS$(B)$}
+\newcommand{\bcs}{BCS}
+\newcommand{\bcsb}{BCS$(C)$}
+\newcommand{\ar}{AR}
+\newcommand{\nr}{NR}
+\newcommand{\icl}{ICL}
+\newcommand{\nrr}{NRR}
+\newcommand{\nrrf}{NRR1}
+\newcommand{\nrrs}{NRR2}
+\newcommand{\open}{\textsc{Open}}
+\newcommand{\closed}{\textsc{Closed}}
+\newcommand{\focal}{\textsc{Focal}}
+\newcommand{\focalc}{\textsc{Focal$(C)$}}
+\newcommand{\focals}{Focal Search}
+\newcommand{\fmin}{$f_{min}$}
+
+
+\setlength{\pdfpagewidth}{8.5in} \setlength{\pdfpageheight}{11in}
+%\pdfinfo{
+%/Title(To Reopen or Not to Reopen)
+%/Author(Submission #)}
+
+%\title{Suboptimal Variants of the Conflict-Based Search Algorithm for the Multi-Agent Pathfinding Problem}
+
+%\author{
+%Max Barer \institute{ISE Department, Ben-Gurion University, E-mail:\{max.barer,gunisharon,roni.stern,ariel.felner1\}@gmail.com}
+%\and Guni Sharon
+%\and Roni Stern
+%\and Ariel felner}
+
+
+
+\setcounter{secnumdepth}{2}
+\newtheorem{theorem}{Theorem}
+
+% Used for commenting
+\newcommand{\commenter}[3]{$[$\uppercase{#1}#2:#3$]$  \\}
+\newcommand{\ariel}[2]{\commenter{ariel}{#1}{#2}}
+\newcommand{\roni}[2]{\commenter{roni}{#1}{#2}}
+\newcommand{\vitali}[2]{\commenter{vitali}{#1}{#2}}
+
+\newcommand{\MEMO}[1]
+{ \fbox{
+\begin{minipage}[b]{7.9 cm}
+#1
+\end{minipage}
+} }
+
+
+\begin{document}
+%\title{Don't Split, Try To Work It Out :  An Improved Version of the\\ Conflict-Based-Search for Multi-Agent Pathfinding Algorithms}\MEMO{Roni: The title is horrible. Why so long???}
+\title{Dynamic Potential Search -- A New Bounded Suboptimal Search Algorithm}
+
+\author{XXX}
+
+\maketitle
+
+\begin{abstract}%\vspace{-0.2cm}
+TBD
+\end{abstract}
+
+
+\section{Introduction}
+
+TBD
+
+
+\newpage
+
+\bibliography{library}
+\bibliographystyle{aaai}
+
+\end{document}
