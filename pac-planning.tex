@@ -92,10 +92,11 @@
 \newtheorem{theorem}{Theorem}
 
 % Used for commenting
-\newcommand{\commenter}[3]{$[$\uppercase{#1}#2:#3$]$  \\}
-\newcommand{\ariel}[2]{\commenter{ariel}{#1}{#2}}
-\newcommand{\roni}[2]{\commenter{roni}{#1}{#2}}
-\newcommand{\vitali}[2]{\commenter{vitali}{#1}{#2}}
+\newcommand{\commenter}[2]{\red{[\uppercase{#1}]:{#2}]}}
+\newcommand{\roni}[1]{\commenter{roni}{#1}}
+\newcommand{\brendan}[1]{\commenter{brendan}{#1}}
+
+
 
 \newcommand{\MEMO}[1]
 { \fbox{
@@ -150,7 +151,7 @@ to constract a conformant planning problem such that a solution to
 it is a solution to our model-free problem. This approach to solve the model-free planning problem 
 is sound and can be very efficient, since many conformant planning algorithms exist in the literature~\cite{someConfPlanners}. 
 However, it is not complete, as the conformant planning problem might not be solvable even if the underlying model-free planning problem is. 
-Nonetheless, we prove that under some assumptions, the probability of this occuring decreases quickly with the number of observed trajectories. \roni{Say something better than quickly}
+Nonetheless, we prove that under some assumptions, the probability of this occuring decreases quickly with the number of observed trajectories. \MEMO{Say something better than quickly}
 %We note that the contributionswhile the proposed solution this short paper lays the theoretical framework for model-free planning
 
 %In this paper we introduce a theoretical framework for learning a partial classical planning model from a given set of observed trajectories, and how to plan using these observed trajectoriesin a way that will ensure the goal is achieved. 
@@ -264,19 +265,24 @@ Having $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajecto
 with probability $1-\delta$. 
 \end{theorem}
 \begin{proof}
+\MEMO{Question \#1: There is a conceptual hop that I am missing. I understand that there is a distribution of start-goal pairs. But I don't understand the meaning of a distribution over trajectories. A trajectory is not something that follows some distribution, it is something that is computed by some planning process.}
+
 Let $A'$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, 
-and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trajectory. \roni{Is $A(\mathcal{T})$ referring to any trajectory or only the observed ones?} 
-We first show that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$. 
-\roni{I am always confused with the term {\em any}. Do you mean that the probability that $A(\mathcal{T})\cap A'=\emptyset$ is at most $\delta/2$?}
-For any action $a\in A'$, it will not be invoked in a trajectory drawn from $D$ with probability at most $1-\frac{\epsilon}{2|A|}$. 
+and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trace. 
+\MEMO{Question \#2: So $A'$ is the set of actions used in  trajectories in general (with non-negligable probability), and $A(\mathcal{T})$ are the actions in $\mathcal{T}$?}
+
+%\MEMO{Question \#3: I think we need to assume that the planning process that generated the trajectories is complete.}
+
+We first observe that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
+
+\MEMO{Question \#4: I think you meant above and below $\frac{\epsilon}{2|A|}$ and not $\epsilon/2|A|$}
+Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. 
+%\MEMO{Question \#4: I think there's an extra $|A|$ there: the $\log\frac{2|A|}{\delta}$ should be $\log\frac{2}{\delta}$ Please verify.} My mistake
+Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+
+%Let $A'$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trajectory. \roni{Is $A(\mathcal{T})$ referring to any trajectory or only the observed ones?} We first show that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$. \roni{I am always confused with the term {\em any}. Do you mean that the probability that $A(\mathcal{T})\cap A'=\emptyset$ is at most $\delta/2$?}For any action $a\in A'$, it will not be invoked in a trajectory drawn from $D$ with probability at most $1-\frac{\epsilon}{2|A|}$. 
 %: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
-%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
-Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ 
-is $(1-\frac{\epsilon}{2|A|})^m$. Thus, using $1+x\leq e^x$ inequality, the probability that $a\notin A(\mathcal{T})$ is less than 
-${e^{-\frac{\epsilon}{2|A|}}}^m$. 
-Since $m\geq \frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$, we have that the probability that $a\notin A(\mathcal{T})$ is less than less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
-% * <Roni Stern> 04:11:53 22 Nov 2016 UTC+0200:
-% I could not follow this hop. Can you explain?
+%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\frac{\epsilon}{2|A|})^m$. Thus, using $1+x\leq e^x$ inequality, the probability that $a\notin A(\mathcal{T})$ is less than ${e^{-\frac{\epsilon}{2|A|}}}^m$. Since $m\geq \frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$, we have that the probability that $a\notin A(\mathcal{T})$ is less than less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
 
 %$\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
 
