@@ -119,12 +119,8 @@ performing contingent planning in setting where
 there is no model of the agent's actions. 
 Instead, a set of trajectories used by successfully executed actions are given and the task is to generate a plan that is guaranteed
 to achieve the goal without failing. 
-We propose to address this problem by learning a conservative model of the world, 
-in which actions are guaranteed to be applicable, and generating a plan with this conservative model. 
-This paper studies this conservative approach, answering key questions such as 
-when this approach is applicable and when the possiblity of failure is unavoidable, 
-when it is complete with high likelihood, 
-and what can be said about the cost of the resulting plan. 
+We propose to address this problem by learning a conservative model of the world, in which actions are guaranteed to be applicable, and generating a plan with this conservative model. 
+This paper studies this conservative approach, answering key questions such as when this approach is applicable and when the possiblity of failure is unavoidable, when it is complete with high likelihood, and what can be said about the cost of the resulting plan. 
 \end{abstract}
 
 
@@ -144,14 +140,10 @@ in a setting where a domain model is not available. We call this problem the {\e
 
 
 % Our approach 
-First, we show how to learn from the given trajectories a set of actions
-that the agent can use. For every such action $a$, we bound the set of predicates that
-are $a$'s preconditions and effects. This bounded action model is then used 
-to constract a conformant planning problem such that a solution to 
-it is a solution to our model-free problem. This approach to solve the model-free planning problem 
+First, we show how to learn from the given trajectories a set of actions that the agent can use. 
+For every such action $a$, we bound the set of predicates that are $a$'s preconditions and effects. This bounded action model is then used  to constract a conformant planning problem such that a solution to it is a solution to our model-free problem. This approach to solve the model-free planning problem 
 is sound and can be very efficient, since many conformant planning algorithms exist in the literature~\cite{someConfPlanners}. 
-However, it is not complete, as the conformant planning problem might not be solvable even if the underlying model-free planning problem is. 
-Nonetheless, we prove that under some assumptions, the probability of this occuring decreases quickly with the number of observed trajectories. \MEMO{Say something better than quickly}
+However, it is not complete, as the conformant planning problem might not be solvable even if the underlying model-free planning problem is. Nonetheless, we prove that under some assumptions, the probability of this occuring decreases quickly with the number of observed trajectories. \MEMO{I think it is better to say something more accurate than ``quickly''. How do you say in English taht something grows in a $n\cdot logn$ manner? super-linearly?}
 %We note that the contributionswhile the proposed solution this short paper lays the theoretical framework for model-free planning
 
 %In this paper we introduce a theoretical framework for learning a partial classical planning model from a given set of observed trajectories, and how to plan using these observed trajectoriesin a way that will ensure the goal is achieved. 
@@ -203,8 +195,16 @@ Following prior work on learning action models~\cite{wang1995learning,wang1994le
 	For convenience, we denote by $pre_\mathcal{T}^u(a)$ the set of ``upper bound'' on the preconditions of $a$ given $\mathcal{T}$. Similary, we denote $add_\mathcal{T}^u(a)$, $add_\mathcal{T}^l(a)$, $del_\mathcal{T}^u(a)$, and $del_\mathcal{T}^l(a)$, as the upper and lower bounds of the add and delete effects. 
 
 
+Given these bound on the facts in the pre-conditions and effects, we propose a {\em conservative model-free planning} approach to solve the model-free planning problem. In this approach, we create a conservative planning problem: it has the same predicate, initial state and goal condition as the model-free planning problem. Its actions are all the actions observed in $\mathcal{T}$. The preconditions of an action is  the ``upper'' bound preconditions $pre_\mathcal{T}^u(\cdot)$. The effects are non-deterministic, and represent all possible combinations of add and delete effects in the bounds. 
+
+\subsection{Conserative Model-Free Planning with Conformant Planning}
+There are several effective fully observable non-deterministic (FOND) planners~\cite{}. We aim, however, to find a  solutions to these conservative planning problems that are guaranteed to be applicable. To this end, we create a {\em conformant planning} problem from the conservative planning problem, such that if solveable, will guarantee a solution to the model-free planning problem. Conformant planning can be seen as a middle ground between classical planning and full-blown planning under uncertainty (e.g., MDPs). It supports two forms of uncertainty: uncertainty about the initial state, and non-deterministic action outcome. % Maybe add a def. of conformant planning and make all the mapping more formal
+
 % Now we can have a conformant planning problem and solve it
-Given these bound on the facts in the pre-conditions and effects, we can devise a {\em conformant planning} problem that, if solveable, will guarantee a solution to the model-free planning problem. Conformant planning can be seen as a middle ground between classical planning and full-blown planning under uncertainty (e.g., MDPs). It supports two forms of uncertainty: uncertainty about the initial state, and non-deterministic action outcome. % Maybe add a def. of conformant planning and make all the mapping more formal
+
+
+
+%Given these bound on the facts in the pre-conditions and effects, we can devise a {\em conformant planning} problem that, if solveable, will guarantee a solution to the model-free planning problem. Conformant planning can be seen as a middle ground between classical planning and full-blown planning under uncertainty (e.g., MDPs). It supports two forms of uncertainty: uncertainty about the initial state, and non-deterministic action outcome. % Maybe add a def. of conformant planning and make all the mapping more formal
 
 % Mapping model-free to conformant planning
 The conformat planning problem that corresonds to a given model-free planning problem $\tuple{P,I,G, \mathcal{T}}$ has the same set of predicates ($P$) and goals ($G$). It has a single possible initial state -- $I$, i.e., there is no uncertainty over the initial state. Its actions are all the actions observed in the observed trajectories $\mathcal{T}$. The preconditions of an action $a$ are $pre_\mathcal{T}^u(a)$. The effects are non-deterministic, and are any possible combination of 
@@ -212,7 +212,7 @@ add and delete effects that is in the bounds of Equation~\ref{eq:bounds}. A solu
 
 
 % Something about the difficulty of solving 
-This mapping of model-free to contingent planning is, however, not complete: if no solution was found for the contingent planning problem it still may be the case the the model-free planning has a solution. This has two possible causes: an over conservative estimate of actions' effects and an over conservative estimate of actions' preconditions. 
+This mapping of model-free to contingent planning, and in general our approach of solving model-free planning by solving a conservative planning problem is, however, not complete: if no solution was found for the contingent planning problem it still may be the case the the model-free planning has a solution. This has two possible causes: an over conservative estimate of actions' effects and an over conservative estimate of actions' preconditions. 
 
 \subsection{Known Effects}
 
