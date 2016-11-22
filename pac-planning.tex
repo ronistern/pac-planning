@@ -142,7 +142,7 @@ In this paper we introduce a theoretical framework for learning a partial classi
 \section{Problem Definition}
 The setting we address in this work is a STRIPS planning problem $\Pi=\langle P, A, I, G\rangle$, where $P$ is the set of predicates, $A$ is a set of actions, $I$ is the initial state, and $G$ is the goal condition. We assume here that states in the world as well as the goal condition are defined as a conjunction of predicates from $P$. An action $a\in A$ is defined by its preconditions, add effects, and delete effects, denoted $pre(a)$, $add(a)$, $del(a)$, respectively. 
 We do not consider conditional effects in this work, and assume that 
-$pre(a)$, $add(a)$, and $del(a)$ are all conjunctions of literals. Lastly, we assume that all actions and predicates are grounded. 
+$pre(a)$, $add(a)$, and $del(a)$ are all conjunctions of literals. Lastly, we assume that all actions and predicates are grounded, and that there is no negative preconditions.  
 
 
 In the planning problem we deal with in this paper, which we refer to as {\em model-free planning}, we do not know the capabilities of the action agent directly. Instead, we are given a set of {\em trajectories}. 
@@ -154,12 +154,13 @@ This work focuses on a simpler setting in which there is full state observabilit
 
 The model-free planning problem is defined as follows.
 \begin{definition}[Model-free planning]
-The model-free planning problem is defined by the tuple $\langle P,I,G, \mathcal{T}\rangle$, 
+The model-free planning problem is defined by the tuple $\tuple{P,I,G, \mathcal{T}}$, 
 where $P$, $I$, and $G$ are the predicates, initial state, and goal condition, and $\mathcal{T}$ is a set of trajectories. The task is to generate plan that will achieve $G$, i.e., a sequence of action that, if applied to $I$, and results in a state that satisfies $G$.
+\label{def:model-free-planning}
 \end{definition}
 
 
-\section{A Complete but Impractical Solution}
+\section{Conservative Model-Free Planning}
 %We follow Walsh and Litman's approach
 %We follow Wang's~\cite{wang1994learning,wang1995learning} approach for learning a STRIPS model from observation and interactions. 
 Following prior work on learning action models~\cite{wang1995learning,wang1994learning,walsh2008efficientLearning}, we partition every observed trajectory $\tuple{s_1,a_1,s_2,\ldots,s_{n+1}}\in\mathcal{T}$ into a set of {\em action triplets}, where each action triplet is of the form $\langle s_i, a_i, s_{i+1}\rangle$. 
@@ -172,96 +173,93 @@ Following prior work on learning action models~\cite{wang1995learning,wang1994le
      \emptyset & \subseteq pre(a) \subseteq & \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s \\
      \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s  & \subseteq add(a) \subseteq & \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s \\
      \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s\setminus s' & \subseteq del(a) \subseteq & P\setminus \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'  
+     \label{eq:bounds}
     \end{align}
     We omit a formal proof of the above for space constraints. Informally, the ``upper'' bound on the precondition of $a$ is due to the fact that a predicate cannot be a precondition of $a$ if it is not in every pre-state of $a$. Similarly, the ``upper'' bound on the add and delete effects is because (1) a fact cannot be an add effect of $a$ if it is not in every post-state of $a$, and (2) a fact cannot be a delete effect of $a$ if it exists in a post-state of $a$. 
-    The ``lower'' bound on the preconditions of $a$ is the trivial one, and 
+    The ``lower'' bound on the preconditions of $a$ is the trivial one. 
+	As for the ``lower'' bound on the effects, every literal that was in a post-state and not in a pre-state must be an add effect, while every literal that was in the pre-state and not in the post-state must be a delete effect. 
+	For convenience, we denote by $pre_\mathcal{T}^u(a)$ the set of ``upper bound'' on the preconditions of $a$ given $\mathcal{T}$. Similary, we denote $add_\mathcal{T}^u(a)$, $add_\mathcal{T}^l(a)$, $del_\mathcal{T}^u(a)$, and $del_\mathcal{T}^l(a)$, as the upper and lower bounds of the add and delete effects. 
+
+
+% Now we can have a conformant planning problem and solve it
+Given these bound on the facts in the pre-conditions and effects, we can devise a {\em conformant planning} problem that, if solveable, will guarantee a solution to the model-free planning problem. Conformant planning can be seen as a middle ground between classical planning and full-blown planning under uncertainty (e.g., MDPs). It supports two forms of uncertainty: uncertainty about the initial state, and non-deterministic action outcome. % Maybe add a def. of conformant planning and make all the mapping more formal
+
+% Mapping model-free to conformant planning
+The conformat planning problem that corresonds to a given model-free planning problem $\tuple{P,I,G, \mathcal{T}}$ has the same set of predicates ($P$) and goals ($G$). It has a single possible initial state -- $I$, i.e., there is no uncertainty over the initial state. Its actions are all the actions observed in the observed trajectories $\mathcal{T}$. The preconditions of an action $a$ are $pre_\mathcal{T}^u(a)$. The effects are non-deterministic, and are any possible combination of 
+add and delete effects that is in the bounds of Equation~\ref{eq:bounds}. A solution to a conformant planning problem is a {\em conformant plan} -- a sequence of actions that is guaranteed to achieve the goal regardless of the uncertainty in the initial condition and in the nondeterministic effects of actions. Thus, a solution to the conformant planning outlined above is necessarily a sound solution to the corresponding model-free planning problem. 
+
+
+% Something about the difficulty of solving 
+This mapping of model-free to contingent planning is, however, not complete: if no solution was found for the contingent planning problem it still may be the case the the model-free planning has a solution. This has two possible causes: an over conservative estimate of actions' effects and an over conservative estimate of actions' preconditions. 
+
+\subsection{Known Effects}
+
+%Following Walsh and Littman~\shortcite{walsh2008efficientLearning}, we consider in the rest of this paper a setting in which action effects are known and the uncertainty only stems from the overconservative set of preconditions. To motivate this special case, observe that $add_\mathcal{T}^u(a)$ can only be incorrect if there is a predicate that is an add effect and it existed in all the pre-states of $a$.     Similarly, $del_\mathcal{T}^u(a)$ is incorrect only if there is a predicate that is a delete effect     and did not exists in any of the pre-states of $a$. While possible, there are many planning domains that prevent this from occuring by verifying that deleted predicates are in the pre-state and added predicates are not already in the pre-state.  
+ 
+ Under certain conditions, $add_\mathcal{T}^u(a)$ 
+ and $del_\mathcal{T}^u(a)$ are exactly the effects of $a$. These conditions are:
+ (1) if predicate $f$ is a delete effect of an action $a$ then $f$ is a precondition of $a$, 
+ (2) if predicate $f$ is an add effect of $a$ then $f$ must be mutually exclusive with a precondition of $a$. 
+ These conditions are natural in many planning domains and Walsh and Littman~\shortcite{walsh2008efficientLearning} studies this special case in which actions' effects are known and the only uncertaitly is over actions' preconditions. 
+ In the rest of this paper we focus on this special case. 
+ %Walsh and Littman~\shortcite{walsh2008efficientLearning} considered a special case for learning an action model from trajectories, where action effects are known and the uncertainty only stems from the overconservative set of preconditions. In fact, under certain conditions, $add_\mathcal{T}^u(a)$  and $del_\mathcal{T}^u(a)$ are exactly the effects of $a$. 
+ 
+ % In the rest of this paper we adopt this special case, and motivate it as follows. Observe that $add_\mathcal{T}^u(a)$ can only be incorrect if there is a predicate that is an add effect and it existed in all the pre-states of $a$.     Similarly, $del_\mathcal{T}^u(a)$ is incorrect only if there is a predicate that is a delete effect     and did not exists in any of the pre-states of $a$. While possible, there are many planning domains that prevent this from occuring by verifying that deleted predicates are in the pre-state and added predicates are not already in the pre-state.  
+    
+    In this case of known effects, there is a much simpler sound and incomplete approach to solving the model-free problem. Instead of compiling the problem to a conformant planning problem, we now compile it to a classical planning problem, having the same initial state, goal state, set of predicates and actions. The only difference is that the actions preconditions are the overconservative set $pre_\mathcal{T}^u(a)$. It is easy to see that a solution to this problem will also be a solution to the model-free planning problem. However, this approach is incomplete, since $a$'s precondition can be a subset of $add_\mathcal{T}^u(a)$. This can result in the planner think it cannot apply $a$ in a state that does not contain all the predicates in $add_\mathcal{T}^u(a)$, even though $a$'s actual precondition would have allowed performing $a$ in that state. A key question is how likely it is that this will occur, i.e., that usins this approach will not find a solution although one exists. We answer this question in the next section. 
 
 
 
-For every action $a$ that was used in the observed trajectories ($\mathcal{T}$) a triplet of the form 
+%consider $add_\mathcal{T}^u(a)$ and $del_\mathcal{T}^u(a)$. 
 
 
-Unfortunately, the number of trajectories required to solve the model-free planning problem is prohibitively large.
-Let $S$ be the set of all possible states in the planning problem's state space, 
-assume we are given 
+%{\bf Overconservative effects.} A contingent plan is one that achieves the goals for all possible outcomes of the non-deterministic actions. Finding such a plan may not be possible, while finding a plan for the trueFor the add effecs, this means there was a predicate that is an add effect but since it was in all the observed trajectories our 
+%An over conservative estimate of an action $a$'s preconditions means that the preconditions $a$ contain fewer predicates than $pre_\mathcal{T}^u(a)$. Thus, there are states where $a$ can be applied but the conformant planner will not consider it. 
+%ing problem could not , and thus can be executed in a broader range of states. Consider the latter reason -- an over conservative estimate of the actions effects. For the add effecs, this means there was a predicate that is an add effect but since it was in all the observed trajectories our 
+
+
+% If we know the effects then it is a classical planning problem, but still incomplete
+
+% What's the probability that is complete
 
 
 \section{Learning to Perform Model-Free Planning}
-[[Something about the impracticality of the solution above, and how we aim for a more general task, in which we want to maximize probability of success]]
-In general, we cannot guarantee that {\em any finite number of trajectories} will suffice to obtain {\em precisely} the underlying action model. This is because, for example, if some action never appears in a trajectory, we may not know its effects; or, if an action is only used in a limited variety of states, it may be impossible to distinguish its preconditions. What we can hope for, and what we will provide, is to learn enough of the actions accurately enough to be able to find plans for most goals in practice.
-In this work, we follow the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}. The main task we consider is:
+%[[Something about the impracticality of the solution above, and how we aim for a more general task, in which we want to maximize probability of success]]
+In general, we cannot guarantee that {\em any finite number of trajectories} will suffice to obtain {\em precisely} the underlying action model. This is because, for example, if some action never appears in a trajectory, we may not know its effects; or, if an action is only used in a limited variety of states, it may be impossible to distinguish its preconditions. However, as the number of trajectories increase, what we can hope for is to learn enough of the actions accurately enough to be able to find plans for most goals in practice. This gives raise to a statistical view of the model-free planning task (Definition~\ref{def:model-free-planning}), which follow the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}.  %is:
+%In this work, we follow the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}. The main task we consider is:
 
-\begin{definition}[Learning to plan] We suppose that there is an arbitrary, unknown (prior) probability distribution $D$ over triples of initial states, goal conditions, and trajectories for a fixed environment, in particular with a fixed set of actions $A$, predicates $P$, and preconditions and effects for the actions. We assume that these trajectories start in the corresponding initial state and end with the goal condition satisfied. In the {\em learning to plan} task, $(I^{(1)},G^{(1)},T^{(1)}),\ldots,(I^{(m)},G^{(m)},T^{(m)})$ have been drawn independendently from $D$, and we are given as input $T^{(1)},\ldots,T^{(m)}$, and a new initial state and goal $(I,G)$ for some $(I,G,T)$ drawn from $D$. We must either output a plan for $\langle P,A,I,G\rangle$ or, with probability at most $\epsilon$, assert that no plan can be found.
+\begin{definition}[Model-Free Planning as a Learning Task] We suppose that there is an arbitrary, unknown (prior) probability distribution $D$ over triples of initial states, goal conditions, and trajectories for a fixed environment, in particular with a fixed set of actions $A$, predicates $P$, and preconditions and effects for the actions. We assume that these trajectories start in the corresponding initial state and end with the goal condition satisfied. In the model-free planning task, we are given a set of action triplets $(I^{(1)},G^{(1)},T^{(1)}),\ldots,(I^{(m)},G^{(m)},T^{(m)})$ drawn independendently from $D$, and we are given as input $T^{(1)},\ldots,T^{(m)}$, and a new initial state and goal $(I,G)$ for some $(I,G,T)$ drawn from $D$. We must either output a plan for $\langle P,A,I,G\rangle$ or, with probability at most $\epsilon$, assert that no plan can be found.
+%In the model-free planning task, $(I^{(1)},G^{(1)},T^{(1)}),\ldots,(I^{(m)},G^{(m)},T^{(m)})$ have been drawn independendently from $D$, and we are given as input $T^{(1)},\ldots,T^{(m)}$, and a new initial state and goal $(I,G)$ for some $(I,G,T)$ drawn from $D$. We must either output a plan for $\langle P,A,I,G\rangle$ or, with probability at most $\epsilon$, assert that no plan can be found.
 \end{definition}
 
-We note that this task is conservative in the sense that when an algorithm solving it outputs a plan, the plan is required to be correct. The algorithm may only make errors by failing to find a plan when one exists.
-
-\section{Learning a Conservative Model}
-We follow Wang's~\shortcite{wang1994learning,wang1995learning} approach for learning a STRIPS model from observation and interactions. For every action $a$ that was used in the observed trajectories ($\mathcal{T}$) a triplet of the form 
-$\langle P, a, D\rangle$, where $P$ is the state before $a$ was applied and $D$ is the {\em delta state}, which represents the difference between $P$ and the state observed after applying $a$ to $P$. Formally, a delta-state is a pair $\langle add, del \rangle$, where $\mathtt{add}$ and $\mathtt{DEL}$ are conjunction of literals that describe the facts added to and deleted from $P$ in the state observed after $a$ was performed. %are both conjuncts of ground literals describing the literals that are added to and deleted from the pre-state after the operator is applied. The delta-state is the dierence between the post-state and pre-state
-
-%$\langle s, a, s'\rangle$ is generated for every occurence of $a$ in $\mathcal{T}, such that $s$ is the state before applying $a$ and $s'$ is the state afterwards. 
+%We note that this task is conservative in the sense that when an algorithm solving it outputs a plan, the plan is required to be correct. The algorithm may only make errors by failing to find a plan when one exists. %\section{Theoretical Guarantees and Limitations} How many trajectories do we need to guarantee that every plan can be generated?
 
 
-From the set of observed trajectories, we extract triplets of the form $\langle s, a, s'\rangle$
-
-They maintain for each action $a$ two sets of possible preconditions: the set of most specific preconditions ($S(a)$) and the set of most general ($G(a)$) preconditions. 
-
-Under some simplifying assumptions, which we outline below, the set of most specific preconditions $S(a)$ consists a sufficient condition for executing $a$. Under this condition, any plan that uses $S(a)$ as the set of preconditions to $a$ is guaranteed to find the goal, resulting in a sound yet incomplete solution. 
-
-The interesting questions are: how to compute $Sa(a)$, what are the assumptions that are required for $S(a)$ to indeed be sufficient precdonios, and how many trajectories are needed to provide some guarantee of completeness. We address these questions below. 
-
-
-%(no negative preconditions, no noise, full observability), it holds that the real preconditions of $a$ are a superset of $G(a)$ and a subset of $S(a)$. Thus, we can solve the model-free planning problem by generating a plan that assumes the preconditions in $S(a)$ are the true preconditions. Since they are sufficient condition, we know that the plan will succeed. 
-
-
-%, $S(a)$ and $G(a)$, where $S(a)$ is a set of facts that are sufficient preconditions and $G(a)$ is a set of facts that are required preconditions. They refer to these sets as the set of most specific ($S(a)$) and the set of most general ($G(a)$) preconditions. Under some simplifying assumptions (no negative preconditions, no noise, full observability), it holds that the real preconditions of $a$ are a superset of $G(a)$ and a subset of $S(a)$. Thus, we can solve the model-free planning problem by generating a plan that assumes the preconditions in $S(a)$ are the true preconditions. Since they are sufficient condition, we know that the plan will succeed. 
-
-
-We propose a conservative approach to solve the model-free planning problem
-that first learns a partial model from the given trajectories and then uses it to generate a plan that is guaranteed to reach the goal. For a real, unknown, planning problem $\Pi^*=\langle P,A,I,G\rangle$ we will analyze the observed trajectories to learn the following planning problem $\Pi_L=\langle P,A_L,I,G\rangle$, where $A_L$ is the learned actions. 
-Ideal
-We aim that $A_L$ will 
-
-
-From the set of observed trajectories ($\mathcal{T}$), we extract the set of actions that were part of the observed trajectories, 
-denoted by $A(\mathcal{T})$. Formally,
-\[ A(\mathcal{T})=\{a | \exists T\in\mathcal{T} \text{~such that~} a\in T\} \]
-Next, we generate for action $a\in A(\mathcal{T})$ a set of preconditions and effects, by considering the states that were before and after $a$ in the trajectories where it appears. 
-Let $T(a)$ be the set of trajectories in $\mathcal{T}$ in which $a$ appeared, i.e., 
-\[ T(a)=\{T | T\in \mathcal{T} \text{~and~} a\in T\} \]
-
-
-We define the preconditions and effects of $a$, denoted $pre(a)$ and $eff(a)$, respectively, as follow:
-\begin{itemize}
-    \item {\bf Preconditions.} The intersection of predicates that were true in all the state that preceded $a$ in the given trajectories $\mathcal{T}$. 
-    \item {\bf Effects.} The difference, predicates, between states immediately before $a$ and states immediately after $a$. 
-\end{itemize}
-
-The effects are, of course, the real effects of $a$. However, the preconditions are a superset of the preconditions of $a$. Thus, every plan generated with these actions is a valid plan in the real model, but we might not find a plan we can generate even though such exists. 
-
-MAYBE TALK ABOUT COSTS (E.G., ALL POSSIBLE SOLUTIONS TO A LINEAR EQUATION, IF WE HAVE THE COSTS OF THE TRAJECTORIES)
-% hich learns from the observed trajectories a partial model that is ``safe'' to use in planning.  This results in a model that can generate a subset of the plans that the original, unknown, model can generate, but the generated plan are guaranteed to be applicable. 
-
-
-%\section{Model-Free Planning as Conformant Planning}
-%HERE WE'LL TALK ABOUT HOW THE ABOVE COMPILES TO CONFORMANT PLANNING,SO WE CAN JUST RUN A SUITABLE PLANNING. ALSO, SOME OF THESE PLANNERS JUST COMPILE TO CLASSICAL PLANNERS, SO THAT'S EVEN BETTER. 
-
-
-\section{Theoretical Guarantees and Limitations}
-
-
-
-How many trajectories do we need to guarantee that every plan can be generated?
-
+A key question is how many trajectories do be certain enough that that for a given start and goal state, a  plan can be generated. 
 \begin{theorem}
-With probability $1-\delta$, $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories suffice for algorithm BLAH to solve the task of learning to plan.
+%With probability $1-\delta$, $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories suffice for solving the model-free planning problem.
+%task of learning to plan.
+Having $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories suffice for solving the model-free planning problem
+with probability $1-\delta$. 
 \end{theorem}
 \begin{proof}
 Let $A'$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, 
-and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trace. 
-We first observe that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trajectory. 
+We first show that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$. For any action $a\in A'$, it will not be invoked in a trajectory drawn from $D$ with probability at most $1-\frac{\epsilon}{2|A|}$. 
+%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
+%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
+Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ 
+is $(1-\frac{\epsilon}{2|A|})^m$. Thus, using $1+x\leq e^x$ inequality, the probability that $a\notin A(\mathcal{T})$ is less than 
+${e^{-\frac{\epsilon}{2|A|}}}^m$. 
+Since $m\geq \frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$, we have that the probability that $a\notin A(\mathcal{T})$ is less than less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+% * <Roni Stern> 04:11:53 22 Nov 2016 UTC+0200:
+% I could not follow this hop. Can you explain?
 
+%$\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
+
+
+%is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$.
+%is $(1-\frac{\epsilon}{2|A|})^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
 We will call an assignment of preconditions {\em unsafe} (for $A(\mathcal{T})$) if at least one term in at least one of the preconditions for at least one of the actions is missing. We will call an assignment of preconditions {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, there is an action $a\in A'$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ is not satisfied.  Observe that if we can find an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A'$, then for $(I,G)$ sampled from $D$, with probability $1-\epsilon/2$ there is a plan for $(I,G)$ that only uses actions in $A'$ since in particular, the corresponding, unknown trajectory uses an action outside $A'$ with probability at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$, and likewise since the preconditions are not inadequate for $A'$, with probability $1-\epsilon/2$ the specified preconditions are satisfied on all of the states in which the corresponding action is used in the unknown trajectory; thus, with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A'\subseteq A(\mathcal{T})$ (where containment holds with probability $1-\delta/2$, as established above). Moreover, since the assignment of preconditions to actions is not unsafe, if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisified. 
 
 It thus suffices to argue that the algorithm finds an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A'$. We first observe that there are $2^{|A||P|}$ candidate preconditions over $|P|$ for our $|A|$ actions. Now, the subset $BAD$ of these assignments of preconditions that are inadequate for at least one action $a\in A'$ in particular has size at most $2^{|A||P|}$. We note that any particular inadequate assignment cannot be produced as output by the algorithm if we draw a trajectory in which for one of the actions in $a\in A'$ the precondition assigned to $a$ by that inadequate assignment is not satisfied on one of the states in the trajectory in which $a$ is invoked. Note that by the definition of inadequacy, for each example trajectory drawn, such a state appears with probability at least $\epsilon/2$. Therefore, the probability that no state appears in our $m$ independently drawn trajectories is at most $(1-\epsilon/2)^m$. Concretely, since $m\geq\frac{(2ln 2)|A|}{\epsilon}(|P|+\log\frac{2|A|}{\delta})>\frac{2\ln 2}{\epsilon}(|A||P|+\log\frac{2}{\delta})$, this is at most $\delta/2^{|A||P|+1}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.

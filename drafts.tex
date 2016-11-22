@@ -1,0 +1,55 @@
+%% It is just an empty TeX file.
+%% Write your code here.
+
+
+\section{Learning a Conservative Model}
+We follow Wang's~\shortcite{wang1994learning,wang1995learning} approach for learning a STRIPS model from observation and interactions. For every action $a$ that was used in the observed trajectories ($\mathcal{T}$) a triplet of the form 
+$\langle P, a, D\rangle$, where $P$ is the state before $a$ was applied and $D$ is the {\em delta state}, which represents the difference between $P$ and the state observed after applying $a$ to $P$. Formally, a delta-state is a pair $\langle add, del \rangle$, where $\mathtt{add}$ and $\mathtt{DEL}$ are conjunction of literals that describe the facts added to and deleted from $P$ in the state observed after $a$ was performed. %are both conjuncts of ground literals describing the literals that are added to and deleted from the pre-state after the operator is applied. The delta-state is the dierence between the post-state and pre-state
+
+%$\langle s, a, s'\rangle$ is generated for every occurence of $a$ in $\mathcal{T}, such that $s$ is the state before applying $a$ and $s'$ is the state afterwards. 
+
+
+From the set of observed trajectories, we extract triplets of the form $\langle s, a, s'\rangle$
+
+They maintain for each action $a$ two sets of possible preconditions: the set of most specific preconditions ($S(a)$) and the set of most general ($G(a)$) preconditions. 
+
+Under some simplifying assumptions, which we outline below, the set of most specific preconditions $S(a)$ consists a sufficient condition for executing $a$. Under this condition, any plan that uses $S(a)$ as the set of preconditions to $a$ is guaranteed to find the goal, resulting in a sound yet incomplete solution. 
+
+The interesting questions are: how to compute $Sa(a)$, what are the assumptions that are required for $S(a)$ to indeed be sufficient precdonios, and how many trajectories are needed to provide some guarantee of completeness. We address these questions below. 
+
+
+%(no negative preconditions, no noise, full observability), it holds that the real preconditions of $a$ are a superset of $G(a)$ and a subset of $S(a)$. Thus, we can solve the model-free planning problem by generating a plan that assumes the preconditions in $S(a)$ are the true preconditions. Since they are sufficient condition, we know that the plan will succeed. 
+
+
+%, $S(a)$ and $G(a)$, where $S(a)$ is a set of facts that are sufficient preconditions and $G(a)$ is a set of facts that are required preconditions. They refer to these sets as the set of most specific ($S(a)$) and the set of most general ($G(a)$) preconditions. Under some simplifying assumptions (no negative preconditions, no noise, full observability), it holds that the real preconditions of $a$ are a superset of $G(a)$ and a subset of $S(a)$. Thus, we can solve the model-free planning problem by generating a plan that assumes the preconditions in $S(a)$ are the true preconditions. Since they are sufficient condition, we know that the plan will succeed. 
+
+
+We propose a conservative approach to solve the model-free planning problem
+that first learns a partial model from the given trajectories and then uses it to generate a plan that is guaranteed to reach the goal. For a real, unknown, planning problem $\Pi^*=\langle P,A,I,G\rangle$ we will analyze the observed trajectories to learn the following planning problem $\Pi_L=\langle P,A_L,I,G\rangle$, where $A_L$ is the learned actions. 
+Ideal
+We aim that $A_L$ will 
+
+
+From the set of observed trajectories ($\mathcal{T}$), we extract the set of actions that were part of the observed trajectories, 
+denoted by $A(\mathcal{T})$. Formally,
+\[ A(\mathcal{T})=\{a | \exists T\in\mathcal{T} \text{~such that~} a\in T\} \]
+Next, we generate for action $a\in A(\mathcal{T})$ a set of preconditions and effects, by considering the states that were before and after $a$ in the trajectories where it appears. 
+Let $T(a)$ be the set of trajectories in $\mathcal{T}$ in which $a$ appeared, i.e., 
+\[ T(a)=\{T | T\in \mathcal{T} \text{~and~} a\in T\} \]
+
+
+We define the preconditions and effects of $a$, denoted $pre(a)$ and $eff(a)$, respectively, as follow:
+\begin{itemize}
+    \item {\bf Preconditions.} The intersection of predicates that were true in all the state that preceded $a$ in the given trajectories $\mathcal{T}$. 
+    \item {\bf Effects.} The difference, predicates, between states immediately before $a$ and states immediately after $a$. 
+\end{itemize}
+
+The effects are, of course, the real effects of $a$. However, the preconditions are a superset of the preconditions of $a$. Thus, every plan generated with these actions is a valid plan in the real model, but we might not find a plan we can generate even though such exists. 
+
+MAYBE TALK ABOUT COSTS (E.G., ALL POSSIBLE SOLUTIONS TO A LINEAR EQUATION, IF WE HAVE THE COSTS OF THE TRAJECTORIES)
+% hich learns from the observed trajectories a partial model that is ``safe'' to use in planning.  This results in a model that can generate a subset of the plans that the original, unknown, model can generate, but the generated plan are guaranteed to be applicable. 
+
+
+%\section{Model-Free Planning as Conformant Planning}
+%HERE WE'LL TALK ABOUT HOW THE ABOVE COMPILES TO CONFORMANT PLANNING,SO WE CAN JUST RUN A SUITABLE PLANNING. ALSO, SOME OF THESE PLANNERS JUST COMPILE TO CLASSICAL PLANNERS, SO THAT'S EVEN BETTER. 
+
