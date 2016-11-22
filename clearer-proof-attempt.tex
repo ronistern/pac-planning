@@ -1,0 +1,99 @@
+%% It is just an empty TeX file.
+%% Write your code here.
+
+
+
+A key question is how many trajectories do be certain enough that that for a given start and goal state, a  plan can be generated. 
+
+\begin{theorem}
+%With probability $1-\delta$, $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories suffice for solving the model-free planning problem.
+%task of learning to plan.
+Having $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories suffice for solving the model-free planning problem
+with probability $1-\delta$. 
+\end{theorem}
+\begin{proof}
+%\MEMO{Question \#1: There is a conceptual hop that I am missing. I understand that there is a distribution of start-goal pairs. But I don't understand the meaning of a distribution over trajectories. A trajectory is not something that follows some distribution, it is something that is computed by some planning process.}
+Intuitively, we first prove that the set of actions that exists in the observed trajectories is sufficient to solve a randomly drawn problem with high probability. Then, we show that although the set of preconditions we assume is conservative, it is still sufficient to enable finding a plan with high probability. 
+
+\begin{lemma}
+Let $A_\epsilon$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$ 
+and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trace. 
+The probability that any action $a\in A_\epsilon$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$.
+\label{lem:sufficientActions}
+\end{lemma}
+{\bf Proof:}
+%Let $A_\epsilon$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, 
+%and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trace. 
+%\MEMO{Question \#2: So $A'$ is the set of actions used in  trajectories in general (with non-negligable probability), and $A(\mathcal{T})$ are the actions in $\mathcal{T}$?}
+%\MEMO{Question \#3: I think we need to assume that the planning process that generated the trajectories is complete.}
+%We first observe that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
+By definition, the probability that an action in $A_\epsilon$ does not exist in a trajectory drawn from $D$ is $1-\frac{\epsilon}{2|A|}$. Since the observed trajectories $\mathcal{T}$ are drawn independently from $D$ we have that the probability that $a\notin A(\mathcal{T})$ is $(1-\frac{\epsilon}{2|A|})^m$. 
+Using the inequality $1-x\leq e^{-x}$ and 
+the fact that 
+$m>\frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$, we have that the probability that $a\notin A(\mathcal{T})$ is at most $\delta/2$. Hence, by a union bound over $a\in A_\epsilon$ (noting $|A_\epsilon|\leq |A|$), $A_\epsilon\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+$_\Box$. 
+
+
+%Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+%$A(\mathcal{A})$ is will not appear in any observed trajectory Consider an action $a\in A_\epsilon$.
+%\MEMO{Question \#4: I think you meant above and below $\frac{\epsilon}{2|A|}$ and not $\epsilon/2|A|$}
+%Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. 
+%\MEMO{Question \#4: I think there's an extra $|A|$ there: the $\log\frac{2|A|}{\delta}$ should be $\log\frac{2}{\delta}$ Please verify.} My mistake
+%Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+
+%Let $A'$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trajectory. \roni{Is $A(\mathcal{T})$ referring to any trajectory or only the observed ones?} We first show that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$. \roni{I am always confused with the term {\em any}. Do you mean that the probability that $A(\mathcal{T})\cap A'=\emptyset$ is at most $\delta/2$?}For any action $a\in A'$, it will not be invoked in a trajectory drawn from $D$ with probability at most $1-\frac{\epsilon}{2|A|}$. 
+%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
+%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\frac{\epsilon}{2|A|})^m$. Thus, using $1+x\leq e^x$ inequality, the probability that $a\notin A(\mathcal{T})$ is less than ${e^{-\frac{\epsilon}{2|A|}}}^m$. Since $m\geq \frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$, we have that the probability that $a\notin A(\mathcal{T})$ is less than less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+
+%$\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
+
+
+%is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$.
+%is $(1-\frac{\epsilon}{2|A|})^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
+We will call an assignment of preconditions {\em unsafe} (for $A(\mathcal{T})$) if at least one term in at least one of the preconditions for at least one of the actions is missing. We will call an assignment of preconditions {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, there is an action $a\in A_\epsilon$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ is not satisfied. 
+
+\begin{lemma}
+%If the preconditions of the learned action model are neither unsafe nor inadequate, then for a start-goal pair $(I,G)$ sampled from $D$, there is a plan for $(I,G)$ that only uses actions in $A_\epsilon$ with probability of at least  $1-\epsilon/2$.
+If the preconditions of the learned action model are neither unsafe nor inadequate, then with probability of at least  $1-\epsilon$ it holds that for a start-goal pair $(I,G)$ sampled from $D$ there is a plan for $(I,G)$ that will be found by our conservative model-free planner.
+\label{lem:plan-existance}
+\end{lemma}
+\begin{proof}
+We prove Lemma~\ref{lem:plan-existance} in two steps: (1) showing that there exists a plan using only actions in $A_\epsilon$ with probabiltiy higher than $1-\epsilon/2$, 
+and (2) showing that the conservative preconditions are satisfied in that plan with probability higher than 
+
+(1) only uses actions in $A_\epsilon$ and (2) the conservative preconditions learned from $\mathcal{T}$ for these actions are satisfied. 
+
+By negation, assume that the probability of sampling a start-goal pair $(I,G)$ for which  all trajectories use an action not in $A_\epsilon$ is higher than $\epsilon/2$. This means that the probability of sampling a trajectory for such a start-goal pairs is also higher than $\epsilon/2$. However, the probability of sampling a trajectory that uses an action not in $A_\epsilon$ is at most  $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$ (by definition of $A_\epsilon$).
+\end{proof}
+
+
+Observe that if we can find an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, then for $(I,G)$ sampled from $D$, with probability $1-\epsilon/2$ there is a plan for $(I,G)$ that only uses actions in $A_\epsilon$ since in particular, the corresponding, unknown trajectory uses an action outside $A_\epsilon$ with probability at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$, and likewise since the preconditions are not inadequate for $A'$, with probability $1-\epsilon/2$ the specified preconditions are satisfied on all of the states in which the corresponding action is used in the unknown trajectory; thus, with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A_\epsilon\subseteq A(\mathcal{T})$ (where containment holds with probability $1-\delta/2$, as established above). Moreover, since the assignment of preconditions to actions is not unsafe, if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisified. 
+
+It thus suffices to argue that the algorithm finds an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A\epsilon$. We first observe that there are $2^{|A||P|}$ candidate preconditions over $|P|$ for our $|A|$ actions. Now, the subset $BAD$ of these assignments of preconditions that are inadequate for at least one action $a\in A'$ in particular has size at most $2^{|A||P|}$. We note that any particular inadequate assignment cannot be produced as output by the algorithm if we draw a trajectory in which for one of the actions in $a\in A'$ the precondition assigned to $a$ by that inadequate assignment is not satisfied on one of the states in the trajectory in which $a$ is invoked. Note that by the definition of inadequacy, for each example trajectory drawn, such a state appears with probability at least $\epsilon/2$. Therefore, the probability that no state appears in our $m$ independently drawn trajectories is at most $(1-\epsilon/2)^m$. Concretely, since $m\geq\frac{(2ln 2)|A|}{\epsilon}(|P|+\log\frac{2|A|}{\delta})>\frac{2\ln 2}{\epsilon}(|A||P|+\log\frac{2}{\delta})$, this is at most $\delta/2^{|A||P|+1}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
+
+
+%We next observe that by a Chernoff bound, the probability that an action $a\in A'$ does not appear in at least an $\epsilon/3|A|$-fraction of the $m$ example trajectories is at most $\exp(-\frac{1}{2}36m\frac{\epsilon}{2|A|})<\delta/2|A|$, and that the probability that an action $a\notin A''$ appears in at least a $\epsilon/3|A|$-fraction of the example trajectories is at most $\exp(-\frac{1}{3}144m\frac{\epsilon}{4|A|})<\delta/2|A|$. Thus by a union bound over the (at most $|A|$) actions in $A'$ or outside $A''$, with probability $1-\delta/2$, all of the actions in $A'$ appear in sufficiently many of the trajectories that our estimates are adequate and no action outside $A''$ appears so often.
+
+We finally note that the algorithm cannot produce unsafe preconditions for $A(\mathcal{T})$: indeed, observe that the preconditions are satisfied for every action invoked in every trajectory obtained by the algorithm. Since the algorithm includes all of the literals that are satisfied on all of the states in which that action was invoked, in particular it includes all of the literals that actually appear in the precondition. Thus, with probability $1-\delta$, the algorithm indeed produces an assignment of preconditions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A'$, as needed.
+\end{proof}
+
+
+\section{Related Work}
+Mour{\~{a}}o et al.~\shortcite{mourao2012learning} addressed the problem of learning a STRIPS actions given a set of observed trajectories. In their setting, the objserved trajectories consists cases in which the agent tried to perform an action an failed, while in our case the observations are only successful trajectories. Also, we assume full observability while they considered partial and noisy observations of the states in the trajectories. Their approach was to use machine learning methods to predict the outcome of an action and to predict whether it is applicable. Consequently, the plan generated by using this model can fail. By contrast, we aim for a plan that is guaranteed to work. Another similarity of this paper to the paper Mour{\~{a}}o et al.~\shortcite{mourao2012learning} 
+
+Also related is the work of Konidarid et al.~\shortcite{konidaris2014constructing} showed how to learn a STRIPS model that provides a useful high-level plan for a continuous world. 
+
+
+The mentioned above work of Wang~\shortcite{wang1995learning,wang1994learning} is, of course, very related to our work. 
+They proposed a process for learning a STRIPS model that includes learning an action model. Unlike our work, they discussed how to refine that action model by interacting with the world, including learning from failed 
+execution of actions.  We require that the plan generated by the learned action {\em must} work. This is suitable for setting where plan failure is unacceptable, e.g., where failure corresponds to physical harm to the acting agent.  
+
+
+Levine and DeJong~\shortcite{levine2006explanation} proposed how to learn control operators 
+from background knowledge and experimentations. A similar approach is taken in many re-inforcement learning algorithms. Again, our task is different, in that we do not allow experimentation and aim for a plan that is guaranteed to be sound.
+
+Jim{\'e}nez et al.~\shortcite{jimenez2013integrating} also studied how to integrate learning of planning operators and planning. Their approach included an option to experiment with planning rules that are probably correct, while we aim for a provably sound plan. 
+
+Walsh and Littman~\shortcite{walsh2008efficientLearning} also discuss the problem of learning STRIPS operators from observed trajectories. They too interleve planning and execution, where they learn an action model, find a plan for a given planning problem, and update that action model by the success or failure of the generated plan. Unlike other work, they also provide a theoretical bounds on the sample complexity -- the number of interactions needed in order to guarantee that the resulting planner is sound and complete. By contrast, we do not assume any planning and execution loop, and we aim for a planning algorithm that is guaranteed to be sound, at the cost of completeness. 
+This affects their approach to learning: they attempted to follow an optimistic assumption about the preconditions and effects of the learned actions, in an effort to identify inaccuracies in their action model. By contrast, we are forced to take a pessimistic approach, as we aim for a successful execution of the plan rather than information gathering to improve the action model. 
+
