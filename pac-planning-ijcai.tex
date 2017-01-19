@@ -291,6 +291,7 @@ A key question is how our certainty that a plan can be generated for a new start
 %task of learning to plan.
 %$m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories  suffice for solving the conformant model-free learning-to-plan problem with probability $1-\delta$.
 It is sufficient to observe $m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories to solve the conformant model-free learning-to-plan problem with probability $1-\delta$. 
+\label{the:pac-conformant}
 \end{theorem}
 %\begin{proof}
 %\MEMO{Question \#1: There is a conceptual hop that I am missing. I understand that there is a distribution of start-goal pairs. But I don't understand the meaning of a distribution over trajectories. A trajectory is not something that follows some distribution, it is something that is computed by some planning process.}
@@ -358,6 +359,73 @@ It thus suffices to argue that the algorithm finds an assignment of precondition
 
 We finally note that the algorithm cannot produce unsafe preconditions for $A(\mathcal{T})$: indeed, observe that the preconditions are satisfied for every action invoked in every trajectory obtained by the algorithm. Since the algorithm includes all of the literals that are satisfied on all of the states in which that action was invoked, in particular it includes all of the literals that actually appear in the precondition. Thus, with probability $1-\delta$, the algorithm indeed produces an assignment of preconditions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, as needed.
 \end{proof}
+
+\section{Beyond the Known Effects Case}
+The above analysis holds for the ``Known Effects'' case, i.e., where observing an action in a trajectory reveals the effects of that action. As discussed above this case is true when both of the following conditions hold:
+(1) if a fact $f$ is a delete effect of an action $a$ then 
+$f$ must also be a pre-condition of $a$, and
+(2) if a fact $f$ is an add effect of an action $a$ then 
+$f$ must not be true in the state before applying $a$. 
+These conditions are reasonable in some domains but less so in others. In this section we show how to compile a domain that does not have these properties to a domain where these properties exist.
+Then, we use this compilation to extend Theorem~\ref{the:pac-conformant} to the general case (beyond the known effects case). 
+
+
+% The compilation
+An action for which the above two conditions hold is referred to as a {\em regular} action. The ``Known Effects'' case is when all actions in a planning domain are regular. 
+Let $\mathcal{D}=(P,A)$ be a planning domain that contains actions that are not regular. We show next how to create a planning domain $\mathcal{D}_R$ that is regular and is equivalent to $\mathcal{D}$. 
+
+The set of actions in $\mathcal{D}_R$ contain all the regular actions in $\mathcal{D}$. Addititional actions are added to represent the functionality of the non-regular actions in $\mathcal{D}$, as follows. Let $a$ be an action in $\mathcal{D}$ that is not regular. There are two (not mutually exclusive) reasons why $a$ is not regular. Either it has one or more facts that are delete effects but are not in $pre(a)$, or that it has one or more facts that are add effects and may exists in a state in which $pre(a)$ holds. 
+
+Consider first the former option, where there's a fact $f$ that is a delete effect of $a$ and not in $pre(a)$. For such a case, we add to $\mathcal{D}_R$ two actions: $a_{f+}$ and $a_{f-}$, defined as follows:
+\begin{itemize}
+    \item $a_{f+}$ is equivalent to $a$, except that it has $f$ as a precondition. 
+    \item $a_{f-}$ is equivalent to $a$, except that it has $\neg f$ as a precondition and does not have $f$ as a delete effect.
+\end{itemize}
+
+Similarly, for the case where $f$ is an add effect of $a$ but can be true in a state where $pre(a)$ are true, we create two actions $a_{f+}$ and $a_{f-}$, defined as follows. 
+
+\begin{itemize}
+    \item $a_{f+}$ is equivalent to $a$, except that it has $f$ as a precondition and does not have $f$ as an add effect.
+    \item $a_{f-}$ is equivalent to $a$, except that it has $\neg f$ as a precondition.
+\end{itemize}
+
+It is easy to see that $\mathcal{D}_R$ is equivalent to $\mathcal{D}$ in terms of the set of plans that can be generated in it. However, this compilation is costly, since the number of actions in this regular domain can be much larger than that of $\mathcal{D}$. Specifically, if an action $a$ has two facts that cause $a$ to be non-regular, then we will have four actions to represent $a$ in $\mathcal{D}_R$. In general if we have $n$ facts that cause $a$ to be non-regular this would result in $2^n$ actions in $\mathcal{D}_R$ to represent them.
+
+\MEMO{Roni:I'm not sure how this goes into formula the theorem}
+
+
+
+\subsection{The Learning Algorithm}
+The observed trajectories may be from non-regular domains. 
+
+We will learn different copies of the action $a$. 
+Whenever we observe that $a$ has a different set of effects
+than the set observed so far, 
+
+
+Issues with the above solution: 
+
+(1) we now add the option to have $\neg f$ as a pre-condition. This makes some of the above problematic. I think we can hack it by adding some new facts. 
+
+(2) does it make the complexity of learning much higher
+
+(3) 
+
+\subsection{Post Meeting insights}
+
+1. Approach #1 to handle effects: include negative facts as pre-conditions
+This means that every fact that does not exists in a state 
+is initially assumed to be a negative pre-conditions. 
+This way, we can safely learn effects, because we know that 
+the facts in the add effects and the facts in the delete Effects
+have  really been observed as added/deleted [[need to prove this but sounds Ok]]
+
+2. Approach #2 to handle effects: not include negative facts as pre-conditions
+and do the action splitting approach from above. 
+
+
+3. The need for a distribution over the trajectories is needed
+to define probabilities over action selections. 
 
 
 \section{Related Work}
