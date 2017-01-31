@@ -55,6 +55,7 @@
 
 \newcommand{\qed}{\hfill\ensuremath{\blacksquare}}
 \newcommand{\astar}{A$^*$}
+\newcommand{\SAS}{SAS$^+$}
 \newcommand{\wastar}{WA$^*$}
 \newcommand{\arastar}{ARA$^*$}
 \newcommand{\pts}{PS}
@@ -94,7 +95,7 @@
 
 % Used for commenting
 \newcommand{\commenter}[2]{\red{[\uppercase{#1}]:{#2}]}}
-\newcommand{\roni}[1]{\commenter{roni}{#1}}
+\newcommand{\roni}[1]{[[Roni:#1]]}
 \newcommand{\brendan}[1]{\commenter{brendan}{#1}}
 
 
@@ -154,28 +155,37 @@ However, it is not complete, as the conformant planning problem might not be sol
 
 
 \section{Problem Definition}
-The setting we address in this work is 
-a STRIPS planning domain $\mathcal{D}=\tuple{P,A}$ 
-where $P$ is the set of propositions and $A$ is a set of actions. 
-An action $a\in A$ is defined by its preconditions, add effects, and delete effects, denoted $pre(a)$, $add(a)$, $del(a)$, respectively. The set actions $A$ along with their preconditions and effects is are referred to as the {\em action model} of $\Pi$. We assume that all actions are not parametrized (i.e., they are grounded), and their preconditions and effects are conjunctions of propositions from $P$. 
-We leave for future work more complex action models, e.g., that include negative preconditions, conditional effects, stochastic action outcome, and partial observability. A STRIPS planning problem  is defined by a tuple $\Pi=\tuple{\mathcal{D}, I, G}$ where $\mathcal{D}$ is a STRIPS planning domain, $I$ is a start state and $G$ is a goal condition, both expressed as a conjunction of propositions from $P$. A solution to a STRIPS planning problem is a {\em plan}, which is a sequence of actions from $A$ that if applied to $I$ result in a state that satisfies $G$. % a STRIPS planning problem $\Pi=\langle P, A, I, G\rangle$, where $P$ is the set of propositions, $A$ is a set of actions, $I$ is the initial state, and $G$ is the goal condition. States and the goal condition are expressed as conjunctions of propositions from $P$. An action $a\in A$ is defined by its preconditions, add effects, and delete effects, denoted $pre(a)$, $add(a)$, $del(a)$, respectively. The set actions $A$ along with their preconditions and effects is are referred to as the {\em action model} of $\Pi$. We assume that all actions are not parametrized (i.e., they are grounded), and their preconditions and effects are conjunctions of propositions from $P$. We leave for future work more complex action models, e.g., that include negative preconditions, conditional effects, stochastic action outcome, and partial observability. $\Pi$ will be referred hereinafter as the {\em underlying planning problem}. 
+The setting we address is a a STRIPS planning domain, represented 
+using the \SAS{} formalism~\cite{backstrom}. 
+A planning domain in SAS$+$ is defined by the tuple $\mathcal{D}=\tuple{\mathcal{X}, \mathcal{O}}$, where 
+\begin{itemize}
+    \item $\mathcal{X}=\{x_1,\ldots, x_n\}$ is a set of state variables, each associated with a finite domain $Dom(x_i)$. 
+    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$ 
+    is defined by a tuple $\tuple{pre(a), eff(a)}$, where $pre(a)$ and $eff(a)$ are 
+    assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
+\end{itemize}
 
-
-%We assume in this work that the initial state, the goal condition, and action model of the underlying planning problem are all conjunction of propositions. We leave for future work underling problems with conditional effects, negative preconditions, stochastic action outcome, and partial observability. 
-The key challenge we address in this paper is that a planner is tasked to solve a STRIPS planning problem $\Pi$ but 
-it is not given the action model of $\Pi$ (referred to hereinafter as the underlying planning problem). Instead, it is given a set of {\em trajectories}. 
+A state is a full assignment over the state variables (i.e, assigning a value to each state variable). If an assignment $x_i=v$ is in a state $s$ then we can write $s(x_i)=f$. A planning problem in \SAS{} is defined by the tuple $\Pi=\tuple{\mathcal{D},s_\mathcal{I}, s_\mathcal{G}}$, where 
+    $s_\mathcal{I}$ is the initial state and $s_\mathcal{G}$ 
+    is a partial assignment of some state variables that defines the goal. A state $s$ is a goal state if $s_\mathcal{G}\subseteq s$. 
+    For an action $a$ and a state $s$ we denote by $apply(s,a)$ the state
+    resulting from applying $a$ on state $s$. 
+    A solution to an \SAS{} planning problme is {\em plan}, 
+    which is a sequence of actions $a_1,\ldots,a_m$ such that  $s_\mathcal{G}\subseteq apply(\ldots apply(s,a_1), a_2)\ldots a_m)$. 
+    
+    %%%%% up to here
+The key challenge we address in this paper is how to solve a \SAS{} 
+planning problem $\Pi=\tuple{\mathcal{D},s_\mathcal{I}, s_\mathcal{G}}$ without having the action model of $\mathcal{D}$. Instead, it is given a set of {\em trajectories}. 
 \begin{definition}[Trajectory]
 A trajectory $T=\langle s_1, a_1, s_2, a_2, \ldots, a_{n-1}, s_n\rangle$ is an alternating sequence of states ($s_1,\ldots,s_n$) and actions ($a_1,\ldots,a_n$) that starts and ends with a state. 
 \end{definition}
 A trajectory represents a successful execution of a sequence of actions by the agent. A set of trajectories may be obtained, for example, by monitoring the acting agent when it is controlled manually by a human operator. The states in the given trajectories are assumed to be fully observable. 
-
+\roni{Brendan, maybe we can think about what to do if we don't know the action names. Then, we can ``create'' actions, and maybe this will be more compact than the real actions? this can be pretty cool}
 
 Finally, we can define the {\em conformant model-free planning} problem, which is the focus of this work. 
 \begin{definition}[Conformant Model-free planning]
-The input to a conformant model-free planning problem is a tuple $\tuple{P,I,G, \mathcal{T}}$, 
-where $P$, $I$, and $G$ are the propositions, initial state, and goal condition, respectively, of an underlying planning problem, and $\mathcal{T}$ is the given set of trajectories. The task is to generate plan that
-is a solution to the underlying planning problem, 
-i.e.,  a a sequence of action that , if is applied to $I$, will result in a state that satisfies $G$.
+The input to a conformant model-free planning problem is a tuple $\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G} \mathcal{T}}$, 
+where $\mathcal{X}$, $s_\mathcal{I}$, and $s_\mathcal{G}$ are the state variables, initial state, and goal, respectively, of an underlying planning problem, and $\mathcal{T}$ is the given set of trajectories. The task is to generate plan that is a solution to the underlying planning problem, i.e.,  a a sequence of action that , if is applied to $s_\mathcal{I}$, will result in a state that satisfies $s_\mathcal{G}$.
 \label{def:model-free-planning}
 \end{definition}
 
@@ -188,8 +198,7 @@ To solve the conformant model-free planning problem, we propose to learn a conse
 
 Following prior work on learning action models~\cite{wang1995learning,wang1994learning,walsh2008efficientLearning}, we partition every observed trajectory $\tuple{s_1,a_1,s_2,\ldots,s_{n+1}}\in\mathcal{T}$ into a set of {\em action triplets}, where each action triplet is of the form $\langle s_i, a_i, s_{i+1}\rangle$. 
     Let $\mathcal{T}(a)$ be all the action triplets for action $a$. 
-    A state $s$ and $s'$ are called pre- and post-state of $a$, respectively, if there is an action triplet $\tuple{s,a,s'}$. %    For an action triplet $\tuple{s,a,s'}$ was call $s$ and $s'$ the pre-state and post-state of $a$, respectivley. 
-    Following Walsh and Littman~\shortcite{walsh2008efficientLearning} and Wang~\shortcite{wang1994learning,wang1995learning}, we observe that from the set of trajectories $\mathcal{T}$ we can bound the set of predicates in an action's preconditions and effects, as follows. 
+    A state $s$ and $s'$ are called pre- and post-state of $a$, respectively, if there is an action triplet $\tuple{s,a,s'}$. Following Walsh and Littman~\shortcite{walsh2008efficientLearning} and Wang~\shortcite{wang1994learning,wang1995learning}, we observe that from the set of trajectories $\mathcal{T}$ we can bound the set of predicates in an action's preconditions and effects, as follows. 
     
     %infer the following:
     \begin{align}
