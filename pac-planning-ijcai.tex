@@ -80,7 +80,7 @@
 \newcommand{\focalc}{\textsc{Focal$(C)$}}
 \newcommand{\focals}{Focal Search}
 \newcommand{\fmin}{$f_{min}$}
-
+\newcommand{\cmfp}{conformant model-free planning}
 
 \setlength{\pdfpagewidth}{8.5in} \setlength{\pdfpageheight}{11in}
 %\pdfinfo{
@@ -160,12 +160,13 @@ using the \SAS{} formalism~\cite{backstrom}.
 A planning domain in SAS$+$ is defined by the tuple $\mathcal{D}=\tuple{\mathcal{X}, \mathcal{O}}$, where 
 \begin{itemize}
     \item $\mathcal{X}=\{x_1,\ldots, x_n\}$ is a set of state variables, each associated with a finite domain $Dom(x_i)$. 
-    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$ 
-    is defined by a tuple $\tuple{pre(a), eff(a)}$, where $pre(a)$ and $eff(a)$ are 
-    assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
+    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$      is defined by a tuple $\tuple{pre(a), eff(a)}$, where $pre(a)$ and $eff(a)$ are assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
+
+%    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$      is defined by a tuple $\tuple{pre(a), eff(a)}$, where $pre(a)$ and $eff(a)$ are      assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
 \end{itemize}
 
-A state is a full assignment over the state variables (i.e, assigning a value to each state variable). If an assignment $x_i=v$ is in a state $s$ then we can write $s(x_i)=f$. A planning problem in \SAS{} is defined by the tuple $\Pi=\tuple{\mathcal{D},s_\mathcal{I}, s_\mathcal{G}}$, where 
+A state is a set of assignment of the form $x_i=v$ 
+such that every variable in $\mathcal{X}$ is assigned a single value from its corresponding domain. As a shorthand notation, if a state $s$ contains an assignment $x_i=v$ we will write $s(x_i)=f$. A planning problem in \SAS{} is defined by the tuple $\Pi=\tuple{\mathcal{D},s_\mathcal{I}, s_\mathcal{G}}$, where 
     $s_\mathcal{I}$ is the initial state and $s_\mathcal{G}$ 
     is a partial assignment of some state variables that defines the goal. A state $s$ is a goal state if $s_\mathcal{G}\subseteq s$. 
     For an action $a$ and a state $s$ we denote by $apply(s,a)$ the state
@@ -175,7 +176,7 @@ A state is a full assignment over the state variables (i.e, assigning a value to
     
     %%%%% up to here
 The key challenge we address in this paper is how to solve a \SAS{} 
-planning problem $\Pi=\tuple{\mathcal{D},s_\mathcal{I}, s_\mathcal{G}}$ without having the action model of $\mathcal{D}$. Instead, it is given a set of {\em trajectories}. 
+planning problem $\Pi=\tuple{\mathcal{D},s_\mathcal{I}, s_\mathcal{G}}$ without having the action model of $\mathcal{D}$. Instead, a set of {\em trajectories} are assumed to be given. 
 \begin{definition}[Trajectory]
 A trajectory $T=\langle s_1, a_1, s_2, a_2, \ldots, a_{n-1}, s_n\rangle$ is an alternating sequence of states ($s_1,\ldots,s_n$) and actions ($a_1,\ldots,a_n$) that starts and ends with a state. 
 \end{definition}
@@ -183,11 +184,18 @@ A trajectory represents a successful execution of a sequence of actions by the a
 \roni{Brendan, maybe we can think about what to do if we don't know the action names. Then, we can ``create'' actions, and maybe this will be more compact than the real actions? this can be pretty cool}
 
 Finally, we can define the {\em conformant model-free planning} problem, which is the focus of this work. 
+
 \begin{definition}[Conformant Model-free planning]
-The input to a conformant model-free planning problem is a tuple $\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G} \mathcal{T}}$, 
-where $\mathcal{X}$, $s_\mathcal{I}$, and $s_\mathcal{G}$ are the state variables, initial state, and goal, respectively, of an underlying planning problem, and $\mathcal{T}$ is the given set of trajectories. The task is to generate plan that is a solution to the underlying planning problem, i.e.,  a a sequence of action that , if is applied to $s_\mathcal{I}$, will result in a state that satisfies $s_\mathcal{G}$.
-\label{def:model-free-planning}
+	Let $\Pi=\tuple{\tuple{\mathcal{X},\mathcal{O}},s_\mathcal{I}, s_\mathcal{G}}$ be a planning 
+	problem and let $\mathcal{T}=\{\mathcal{T}^1,\ldots,\mathcal{T}^m\}$ be a set of trajectories in 
+	the planning domain $\tuple{\mathcal{X},\mathcal{O}}$. 
+	The input to a conformant model-free planning problem is 
+	the tuple $\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G}, \mathcal{T}}$
+	and the task is to generate a plan $\pi$  that is a solution to $\Pi$. We denote this conformant model-free planning problem as $\Pi_\mathcal{T}$. 
+	\label{def:model-free-planning}
 \end{definition}
+
+%\begin{definition}[Conformant Model-free planning] The input to a conformant model-free planning problem is a tuple $\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G}, \mathcal{T}}$,  where $\mathcal{X}$, $s_\mathcal{I}$, and $s_\mathcal{G}$ are the state variables, initial state, and goal, respectively, of an underlying planning problem, and $\mathcal{T}$ is the given set of trajectories. The task is to generate plan that is a solution to the underlying planning problem, i.e.,  a a sequence of action that , if is applied to $s_\mathcal{I}$, will result in a state that satisfies $s_\mathcal{G}$. \label{def:model-free-planning}\end{definition}
 
 
 % 1!!!!!!!!!!!!!
@@ -198,71 +206,83 @@ To solve the conformant model-free planning problem, we propose to learn a conse
 
 Following prior work on learning action models~\cite{wang1995learning,wang1994learning,walsh2008efficientLearning}, we partition every observed trajectory $\tuple{s_1,a_1,s_2,\ldots,s_{n+1}}\in\mathcal{T}$ into a set of {\em action triplets}, where each action triplet is of the form $\langle s_i, a_i, s_{i+1}\rangle$. 
     Let $\mathcal{T}(a)$ be all the action triplets for action $a$. 
-    A state $s$ and $s'$ are called pre- and post-state of $a$, respectively, if there is an action triplet $\tuple{s,a,s'}$. Following Walsh and Littman~\shortcite{walsh2008efficientLearning} and Wang~\shortcite{wang1994learning,wang1995learning}, we observe that from the set of trajectories $\mathcal{T}$ we can bound the set of predicates in an action's preconditions and effects, as follows. 
+    A state $s$ and $s'$ are called pre- and post-state of $a$, respectively, if there is an action triplet $\tuple{s,a,s'}$. Following Walsh and Littman~\shortcite{walsh2008efficientLearning} and Wang~\shortcite{wang1994learning,wang1995learning}, we observe that from the set of trajectories $\mathcal{T}$ we can ``bound'' the set of predicates in an action's preconditions and effects, as follows. 
     
     %infer the following:
     \begin{align}
      \emptyset & \subseteq pre(a) \subseteq & \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s \\
-     \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s  & \subseteq add(a) \subseteq & \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s' \\
-     \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s\setminus s' & \subseteq del(a) \subseteq & P\setminus \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'  
-     \label{eq:bounds}
+     \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s &
+     \subseteq eff(a) \subseteq &
+     \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'
+      \label{eq:eff}
     \end{align}
-    We omit a formal proof of the above for space constraints. Informally, the ``upper'' bound on the precondition of $a$ is due to the fact that a predicate cannot be a precondition of $a$ if it is not in every pre-state of $a$. Similarly, the ``upper'' bound on the add and delete effects is because (1) a fact cannot be an add effect of $a$ if it is not in every post-state of $a$, and (2) a fact cannot be a delete effect of $a$ if it exists in a post-state of $a$. 
-    The ``lower'' bound on the preconditions of $a$ is the trivial one. 
-	As for the ``lower'' bound on the effects, every literal that was in a post-state and not in a pre-state must be an add effect, while every literal that was in the pre-state and not in the post-state must be a delete effect. 
-	For convenience, we denote by $pre_\mathcal{T}^u(a)$ the set of ``upper bound'' on the preconditions of $a$ given $\mathcal{T}$. Similary, we denote $add_\mathcal{T}^u(a)$, $add_\mathcal{T}^l(a)$, $del_\mathcal{T}^u(a)$, and $del_\mathcal{T}^l(a)$, as the upper and lower bounds of the add and delete effects. 
-
-
-Given these bounds on the facts in the pre-conditions and effects, we propose a {\em conservative} approach to solve the model-free planning problem. In this approach, we create a planning problem that has the same predicates, initial state, and goal condition as the conformant model-free planning problem. Its actions are all the actions observed in $\mathcal{T}$. The preconditions of an action are the ``upper'' bound preconditions $pre_\mathcal{T}^u(\cdot)$. The effects are non-deterministic, and consist of any possible combination of add and delete effects in the bounds. 
-
-\subsection{Conformant Planning}
-There are several effective fully observable non-deterministic (FOND) planners~\cite{cimatti2003weak,kissmann2009solving}. We aim, however, to find a  solution to our non-deterministic planning problem that is guaranteed to be applicable. This is known as requiring a ``strong plan'' in the FOND literature. A particularly related type of FOND is {\em conformant planning}. Conformant planning can be seen as a middle ground between classical planning and full-blown planning under uncertainty (e.g., MDPs). It supports two forms of uncertainty -- uncertainty about the initial state, and non-deterministic action outcomes -- and aims to find a plan that is guaranteed to reach the goal.
-
- % Maybe add a def. of conformant planning and make all the mapping more formal
-
-% Now we can have a conformant planning problem and solve it
-
-
-
-%Given these bound on the facts in the pre-conditions and effects, we can devise a {\em conformant planning} problem that, if solveable, will guarantee a solution to the model-free planning problem. Conformant planning can be seen as a middle ground between classical planning and full-blown planning under uncertainty (e.g., MDPs). It supports two forms of uncertainty: uncertainty about the initial state, and non-deterministic action outcome. % Maybe add a def. of conformant planning and make all the mapping more formal
-
-% Mapping model-free to conformant planning
-The conformant planning problem that corresponds to a given conformant model-free planning problem $\tuple{P,I,G, \mathcal{T}}$ has the same set of predicates ($P$) and goals ($G$). It has a single possible initial state ($I$), i.e., there is no uncertainty over the initial state. Its actions are all the actions observed in the observed trajectories $\mathcal{T}$. The preconditions of an action $a$ are $pre_\mathcal{T}^u(a)$. The effects are non-deterministic, and consist of any possible combination of 
-add and delete effects that is within the bounds of Equation~\ref{eq:bounds}. A solution to a conformant planning problem is a {\em conformant plan} -- a sequence of actions that is guaranteed to achieve the goal regardless of the uncertainty in the initial condition and in the nondeterministic effects of actions. Thus, a solution to the conformant planning outlined above is necessarily a sound solution to the corresponding model-free planning problem. 
-
-
-% Something about the difficulty of solving 
-This approach of mapping of conformant model-free planning to regular  conformant planning is sound but not complete: if no solution was found for the conformant planning problem it still may be the case the conformant model-free planning has a solution. 
-
-\subsection{Known Effects}
-
-%Following Walsh and Littman~\shortcite{walsh2008efficientLearning}, we consider in the rest of this paper a setting in which action effects are known and the uncertainty only stems from the overconservative set of preconditions. To motivate this special case, observe that $add_\mathcal{T}^u(a)$ can only be incorrect if there is a predicate that is an add effect and it existed in all the pre-states of $a$.     Similarly, $del_\mathcal{T}^u(a)$ is incorrect only if there is a predicate that is a delete effect     and did not exists in any of the pre-states of $a$. While possible, there are many planning domains that prevent this from occuring by verifying that deleted predicates are in the pre-state and added predicates are not already in the pre-state.  
- The above approach for solving the conformant model-free planning problem is incomplete because of two causes: an over-conservative estimate of actions' effects or an over-conservative estimate of actions' preconditions. Under certain conditions, the learned ``upper'' bound on the effects ($add_\mathcal{T}^u(a)$ and $del_\mathcal{T}^u(a)$) is exactly the effects of $a$. These conditions are:
- (1) if a predicate $f$ is a delete effect of an action $a$ then $f$ is a precondition of $a$, 
- (2) if a predicate $f$ is an add effect of $a$ then $f$ must be mutually exclusive with a precondition of $a$. 
- These conditions are natural in many planning domains and Walsh and Littman~\shortcite{walsh2008efficientLearning} studies this special case in which actions' effects are known and the only uncertaitly is over actions' preconditions. 
- %Walsh and Littman~\shortcite{walsh2008efficientLearning} considered a special case for learning an action model from trajectories, where action effects are known and the uncertainty only stems from the overconservative set of preconditions. In fact, under certain conditions, $add_\mathcal{T}^u(a)$  and $del_\mathcal{T}^u(a)$ are exactly the effects of $a$. 
- 
- % In the rest of this paper we adopt this special case, and motivate it as follows. Observe that $add_\mathcal{T}^u(a)$ can only be incorrect if there is a predicate that is an add effect and it existed in all the pre-states of $a$.     Similarly, $del_\mathcal{T}^u(a)$ is incorrect only if there is a predicate that is a delete effect     and did not exists in any of the pre-states of $a$. While possible, there are many planning domains that prevent this from occuring by verifying that deleted predicates are in the pre-state and added predicates are not already in the pre-state.  
+    Equation~\ref{eq:pre} holds because a value assignment $(x_i=v)$ cannot be a precondition of $a$ if it is not in every pre-state of $a$, and thus only value assignments that 
+    exists in all the pre-states of $a$ may be preconditions of $a$ (hence $pre(a)\subseteq \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s$).     On the other hand, the fact that a state variable $x_i$ happened to have the same value $v$ in all the pre-states of the observed trajectories does not necessarily mean that $(x_i=v)$ is a precondition of $a$. It may even be the case that $a$ has no preconditions at all, and thus the ``lower bound'' on an action's precondition is $\emptyset$. 
     
-    In this case of known effects, there is a much simpler sound and incomplete approach to solving the model-free problem. Instead of compiling the problem to a conformant planning problem, we now compile it to a classical planning problem, having the same initial state, goal state, set of predicates, and actions. The only difference is that the actions' preconditions are the over-conservative sets $pre_\mathcal{T}^u(a)$. It is easy to see that a solution to this problem will also be a solution to the model-free planning problem. However, this approach is incomplete, since $a$'s precondition can be a subset of $pre_\mathcal{T}^u(a)$. This can result in the planner thinking that it cannot apply $a$ in a state that does not contain all the predicates in $pre_\mathcal{T}^u(a)$, even though $a$'s actual precondition would have allowed it to perform $a$ in that state. 
+    Equations~\ref{eq:eff} holds because a value assignment $(x_i=v)$ cannot be an effect of $a$ if it is not in every post-state of $a$, and thus only value assignments that 
+    exists in all the post-states of $a$ may be preconditions of $a$ (hence $eff(a)\subseteq \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'$). On the other hand, every variable that has a value in the post-state that is different from the pre-state then it must be an effect (hence $\bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s$).
+    We omit a formal proof of the above discussion for space constraints, 
+    and denote the ``upper bound'' of the preconditions by $pre_\mathcal{T}^U(a)$ 
+    and the ``lower bound'' of the effects by $eff_\mathcal{T}^L(a)$. 
     
     
-     In the rest of this paper we focus on the case of known effects and address the following key question: how likely it is that the above approach is incomplete, i.e., will not find a solution to the conformant model-free planning problem even though one exists. We answer this question in the next section. 
+    
+    \subsection{Compilation to Classical Planning} 
+    Next, we use the bounds in Equation~\ref{eq:pre} and~\ref{eq:eff} to compile a \cmfp{} problem 
+    $\Pi_\mathcal{T}=\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G}, \mathcal{T}}$ 
+	to a classical \SAS{} problem $F(\Pi_\mathcal{T})$, such that a solution to $F(\Pi_\mathcal{T})$ 
+	is a solution to $\Pi_\mathcal{T}$, i.e., it is a solution for the underlying planning problem $\Pi$. 
+	$F(\Pi_\mathcal{T})$ is defined as follows. It has exactly the same set of 
+	state variables ($\mathcal{X}$), start state ($s_\mathcal{I}$), and goal ($s_\mathcal{G}$) as $\Pi_\mathcal{T}$. The actions of $F(\Pi_\mathcal{T})$ is the set of all the actions seen in an observed trajectory. We denote this set of actions by $A(\mathcal{T})$. 
+	The preconditions of an action $a$ in  $F(\Pi_\mathcal{T})$ 
+	are defined as the ``upper bound'' estimate given in Equation~\ref{eq:pre} -- $pre_\mathcal{T}^U(a)$ -- and the effects of $a$ in  $F(\Pi_\mathcal{T})$  
+	are defined to be the ''lower bound'' estimate given in 
+	Equation~\ref{eq:eff} --  $eff_\mathcal{T}^L(a)$.
 
-
-
-%consider $add_\mathcal{T}^u(a)$ and $del_\mathcal{T}^u(a)$. 
-
-
-%{\bf Overconservative effects.} A contingent plan is one that achieves the goals for all possible outcomes of the non-deterministic actions. Finding such a plan may not be possible, while finding a plan for the trueFor the add effecs, this means there was a predicate that is an add effect but since it was in all the observed trajectories our 
-%An over conservative estimate of an action $a$'s preconditions means that the preconditions $a$ contain fewer predicates than $pre_\mathcal{T}^u(a)$. Thus, there are states where $a$ can be applied but the conformant planner will not consider it. 
-%ing problem could not , and thus can be executed in a broader range of states. Consider the latter reason -- an over conservative estimate of the actions effects. For the add effecs, this means there was a predicate that is an add effect but since it was in all the observed trajectories our 
-
-
-% If we know the effects then it is a classical planning problem, but still incomplete
-
-% What's the probability that is complete
+	
+	\begin{theorem}[Soundness]
+		Every solution to $F(\Pi_\mathcal{T})$ is also a solution to $\Pi_\mathcal{T}$
+		\label{the:soundness}
+	\end{theorem}
+	\begin{proof}
+		Since $F(\Pi_\mathcal{T})$ and $\Pi_\mathcal{T}$ share the same
+		state variables, start state, and goal definitions, we only need to show that
+		a plan in $F(\Pi_\mathcal{T})$ is applicable in the underlying planning problem $\Pi$. 
+		Let $\mathcal{O}_\Pi$ and $\mathcal{O}_{F(\Pi_\mathcal{T})}$ be the action models of $\Pi$ and $F(\Pi_\mathcal{T})$, respectively. 
+		We establish next that if an action is applicable 
+		according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$ the it is also applicable 
+		according to $\mathcal{O}_\Pi$ and it will have exactly the same effects. 
+		Let $s$ be a state and let $a$ be an action that is applicable in $s$ according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$. This means that $pre_\mathcal{T}^U(a)\subseteq s$ and consequently  $a$ is also applicable in $s$ according to $\mathcal{O}_\Pi$, since 
+		$pre(a)\subseteq pre_\mathcal{T}^U$. 
+		Now, consider the effects of applying $a$ in $\Pi$. 
+		Let $s'_\Pi$ and $s'_{F(\Pi_\mathcal{T})}$ be the states resulting from applying $a$ on $s$ according to $\mathcal{O}_\Pi$ and $\mathcal{O}_{F(\Pi_\mathcal{T})}$, respectively. 
+		Let $v$ be the value of a state variable $x_i$ in $s'_\Pi$. 
+		Since $eff_\mathcal{T}^U(a)\subseteq eff(a)$, 
+		then according to  $\mathcal{O}_{F(\Pi_\mathcal{T})}$ 
+		either $(x_i=v)$ is an effect of $a$ 
+		or $a$ has no effect on $x_i$. 
+		If the former option is true then $s'_\Pi(x_i)=v=s'_\Pi(x_i)$. 
+		Otherwise, it means that in the observed trajectories applying $a$ 
+		never changed the value of $x_i$, i.e., $x_i$ was equal to $v$ in both pre-state and post-state. By definition, this means that $(x_i=v)$ is a precondition of $a$ 
+		according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$, 
+		and thus $s(x_i)=s'_{F(\Pi_\mathcal{T})}(a)=v=s'_\Pi(a)$. 
+		Thus, the effects of $a$ on $s$ will be the same in both action models, and hence a plan in 
+		$F(\Pi_\mathcal{T})$ is a sound plan for $\Pi$, as required.		
+	\end{proof}
+\roni{Maybe the above is trivial or too wordy. What do you think?}
+		 
+	The practical implication of Theorem~\ref{the:soundness} is the following algorithm for solving 
+	any \cmfp{} problem $\Pi_\mathcal{T}$: compile it to a classical planning problem 
+	$F(\Pi_\mathcal{T})$, run an off-the-shelf classical planner, and return the resulting plan. 
+	This algorithm is sound, but it is not complete. There can be planning problems 
+	that have a solution but the observed trajectories are not sufficient 
+	so that the corresponding compiled planning problem is not solvable. 
+	As an extreme example, if we do not receive any observed trajectories, 
+	the compiled planning problem will not have any actions in its action model
+	and thus will not be able to solve anything. 
+In the next section we show that the required number of trajectories is actually reasonable. 
+	
+	
 
 
 \section{Learning to Perform Model-Free Planning}
@@ -270,22 +290,22 @@ This approach of mapping of conformant model-free planning to regular  conforman
 In general, we cannot guarantee that {\em any finite number of trajectories} will suffice to obtain {\em precisely} the underlying action model. This is because, for example, if some action never appears in a trajectory, we may not know its effects; or, if an action is only used in a limited variety of states, it may be impossible to distinguish its preconditions. Consequently, we cannot guarantee a complete solution to the conformant model-free planning problem. However, as the number of trajectories increases, we can hope to learn enough of the actions accurately enough to be able to find plans for most goals in practice. This gives raise to a statistical view of the conformant model-free planning task (Definition~\ref{def:model-free-planning}) that follows the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}.  %is:
 %In this work, we follow the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}. The main task we consider is:
 
-\begin{definition}[Conformant Model-Free Learning-to-Plan] We suppose that there is an arbitrary, unknown (prior) probability distribution $D$ over triples of the form $\tuple{I,G,T}$, where $I$ is a state, $G$ is a goal condition, and $T$ is a trajectory that starts in $I$ and ends in a state that statisfies $G$, 
+\begin{definition}[Conformant Model-Free Learning-to-Plan] We suppose that there is an arbitrary, unknown (prior) probability distribution $D$ over triples of the form $\tuple{I,s_\mathcal{I}, s_\mathcal{G}}$, where $s_\mathcal{I}$ is a state, $s_\mathcal{G}$ is a goal condition, and $T$ is a trajectory that starts in $s_\mathcal{I}$ and ends in a state that satisfies $s_\mathcal{G}$, 
 and all trajectories are applicable in a fixed planning domain $\mathcal{D}=\tuple{P,A}$. 
 %defined for a set of propositions $P$ and set of actions $A$ with a fixed action model. 
-In the conformant model-free learning-to-plan task, we are given a set of triplets $\tuple{I^{(1)},G^{(1)},T^{(1)}},\ldots,\tuple{I^{(m)},G^{(m)},T^{(m)}}$ drawn independently from $D$, 
-and a new STRIPS planning problem $\Pi=\tuple{\mathcal{D}, I, G}$  
-such that the initial state and goal condition $(I,G)$ are from some $(I,G,T)$ drawn from $D$. 
-The task is to either to output a plan for $\Pi$ or, with probability at most $\epsilon$, assert that no plan can be found.
+In the conformant model-free learning-to-plan task, we are given a set of triplets $\tuple{s_\mathcal{I}^{(1)},s_\mathcal{G}^{(1)},T^{(1)}},\ldots,\tuple{s_\mathcal{I}^{(m)},s_\mathcal{G}^{(m)},T^{(m)}}$ drawn independently from $D$, 
+and a new \SAS{} planning problem $\Pi=\tuple{\mathcal{D}, s_\mathcal{I}, s_\mathcal{G}}$  
+such that the initial state and goal condition $(s_\mathcal{I},G)$ are from some $(s_\mathcal{I},s_\mathcal{G},T)$ drawn from $D$. 
+%The task is to either to output a plan for $\Pi$ or, with probability at most $\epsilon$, assert that no plan can be found.
+The task is to either output a plan for $\Pi$ or, with probability at most $\epsilon$, return that no plan was found.
 %In the model-free planning task, $(I^{(1)},G^{(1)},T^{(1)}),\ldots,(I^{(m)},G^{(m)},T^{(m)})$ have been drawn independently from $D$, and we are given as input $T^{(1)},\ldots,T^{(m)}$, and a new initial state and goal $(I,G)$ for some $(I,G,T)$ drawn from $D$. We must either output a plan for $\langle P,A,I,G\rangle$ or, with probability at most $\epsilon$, assert that no plan can be found.
+\label{def:learning-to-plan}
 \end{definition}
 
 
 
-\MEMO{Roni: I think that since $I$ and $G$ are drawn from some $(I,G,T)$ drawn from $D$ then $(I,G)$ must be a solveable instance. So we should say that the learned action model is sufficient to generate a solution for  the planning problem $(I,G)$ with probability at least $1-\epsilon$. I don't think we can say something about the probability that the problem is not solvable  as we did not have cases like that in the training set  and having such cases means the traninig set used a different  distribution than reality}
-
-\MEMO{Roni: Do we really need the distribution of $(I,G,T)$  and cannot assume only a distribution of ($I,G$)?  I think it will be cleaner to only talk about $D$ inthe proof of Theorem 1  and don't have it in the definition or theorem.}
-
+%\MEMO{Roni: I think that since $I$ and $G$ are drawn from some $(I,G,T)$ drawn from $D$ then $(I,G)$ must be a solveable instance. So we should say that the learned action model is sufficient to generate a solution for  the planning problem $(I,G)$ with probability at least $1-\epsilon$. I don't think we can say something about the probability that the problem is not solvable  as we did not have cases like that in the training set  and having such cases means the traninig set used a different  distribution than reality}
+%\MEMO{Roni: Do we really need the distribution of $(I,G,T)$  and cannot assume only a distribution of ($I,G$)?  I think it will be cleaner to only talk about $D$ inthe proof of Theorem 1  and don't have it in the definition or theorem.}
 We stress that $D$ is arbitrary, and in particular the conditional distribution
 of trajectories given a start and goal state, $D(T|I,G)$, is completely 
 arbitrary. Even if $D(T|I,G)$ produces a deterministic outcome $T(I,G)$, this
@@ -485,6 +505,16 @@ An exception to this is the work of Walsh and Littman~\shortcite{walsh2008effici
 %Walsh and Littman~\shortcite{walsh2008efficientLearning} also discuss the problem of learning STRIPS operators from observed trajectories. They too interleave planning and execution: they learn an action model, find a plan for a given planning problem, and update that action model by the success or failure of the generated plan. 
 
 
+\section{Topics to mention or discuss}
+In the \SAS{} formalism we considered, the effects and preconditions 
+are just sets of value assignments $x_i=v$. However, more involved 
+action models can assign a value to one state variable 
+that is a function of the values of other state variables, 
+e.g., $x_i=s(x_j) xor s(x_k)$. This is not covered in this work
+but maybe we can learn simple assignments in these cases and bound how bad this will be?
+Or, alternatively, search in the space of possible formulaes for a compact representation
+that matches the observations and say something about this also.  
+
 \section{Conclusions}
 This paper deals with a planning problem in which the planner agent does not know the agent's actions. Instead of an action model, the planner is given a set of observed trajectories of successfully executed plans. 
 
@@ -497,6 +527,13 @@ information about the agent's actions, bounding the set of predicates in the act
 
 
 Future directions for conformant model-free planning include studying how to relax the simplifying assumptions made about the action's effects, how to consider richer underlying planning models including parametric actions, conditional effects, stochastic action outcomes, and partial observability.  
+
+
+Another future direction will consider cases where the given planning problem is not solvable.
+Note that we cannot distinguish between cases where our planner outputted that no solution has been found from cases where indeed there are no solution. Future work can study and analyze the probability of such cases.
+
+
+
 
 
 
