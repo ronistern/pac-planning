@@ -31,13 +31,13 @@
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
 
 \def\FullBox{\hbox{\vrule width 8pt height 8pt depth 0pt}}
 \def\sFullBox{\hbox{\vrule width 6pt height 6pt depth 0pt}}
 \newcommand{\qqed}{\(\;\;\;\sFullBox\)}
 \newenvironment{proof}{\noindent{\bf Proof:~~}}{\qed}
-\newenvironment{proof-of}[1]{\noindent{\bf Proof of {#1}:~~}}{\qed}
-\newenvironment{proof-of-claim}{\noindent{\bf Proof:~~}}{\qqed}
 \newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
 
 %\nocopyright
@@ -58,29 +58,11 @@
 \newcommand{\SAS}{SAS$^+$}
 \newcommand{\wastar}{WA$^*$}
 \newcommand{\arastar}{ARA$^*$}
-\newcommand{\pts}{PS}
-\newcommand{\dps}{DPS}
-\newcommand{\ees}{EES}
-\newcommand{\gbfs}{GBFS}
-\newcommand{\bees}{BEES}
-\newcommand{\beeps}{BEEPS}
-\newcommand{\bss}{BSS}
-\newcommand{\bssb}{BSS$(B)$}
-\newcommand{\bcs}{BCS}
-\newcommand{\bcsb}{BCS$(C)$}
-\newcommand{\ar}{AR}
-\newcommand{\nr}{NR}
-\newcommand{\icl}{ICL}
-\newcommand{\nrr}{NRR}
-\newcommand{\nrrf}{NRR1}
-\newcommand{\nrrs}{NRR2}
 \newcommand{\open}{\textsc{Open}}
 \newcommand{\closed}{\textsc{Closed}}
-\newcommand{\focal}{\textsc{Focal}}
-\newcommand{\focalc}{\textsc{Focal$(C)$}}
-\newcommand{\focals}{Focal Search}
-\newcommand{\fmin}{$f_{min}$}
 \newcommand{\cmfp}{conformant model-free planning}
+\newcommand{\eff}{\textit{eff}}
+\newcommand{\pre}{\textit{pre}}
 
 \setlength{\pdfpagewidth}{8.5in} \setlength{\pdfpageheight}{11in}
 %\pdfinfo{
@@ -160,9 +142,7 @@ using the \SAS{} formalism~\cite{backstrom}.
 A planning domain in SAS$+$ is defined by the tuple $\mathcal{D}=\tuple{\mathcal{X}, \mathcal{O}}$, where 
 \begin{itemize}
     \item $\mathcal{X}=\{x_1,\ldots, x_n\}$ is a set of state variables, each associated with a finite domain $Dom(x_i)$. 
-    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$      is defined by a tuple $\tuple{pre(a), eff(a)}$, where $pre(a)$ and $eff(a)$ are assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
-
-%    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$      is defined by a tuple $\tuple{pre(a), eff(a)}$, where $pre(a)$ and $eff(a)$ are      assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
+    \item $\mathcal{O}$ is a set of actions, where each action $a\in \mathcal{O}$      is defined by a tuple $\tuple{\pre(a), \eff(a)}$, where $\pre(a)$ and $\eff(a)$ are assignments of values to state variables, i.e., a set of assignments of the form $x_i=v$ where $v\in Dom(x_i)$. We refer to $\mathcal{O}$ and its associated sets of preconditions and effects as the {\em action model} of the domain.
 \end{itemize}
 
 A state is a set of assignment of the form $x_i=v$ 
@@ -210,77 +190,87 @@ Following prior work on learning action models~\cite{wang1995learning,wang1994le
     
     %infer the following:
     \begin{align}
-     \emptyset & \subseteq pre(a) \subseteq & \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s \\
+     \emptyset & \subseteq \pre(a) \subseteq & \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s \label{eq:pre} \\
      \bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s &
-     \subseteq eff(a) \subseteq &
+     \subseteq \eff(a) \subseteq &
      \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'
       \label{eq:eff}
     \end{align}
     Equation~\ref{eq:pre} holds because a value assignment $(x_i=v)$ cannot be a precondition of $a$ if it is not in every pre-state of $a$, and thus only value assignments that 
-    exists in all the pre-states of $a$ may be preconditions of $a$ (hence $pre(a)\subseteq \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s$).     On the other hand, the fact that a state variable $x_i$ happened to have the same value $v$ in all the pre-states of the observed trajectories does not necessarily mean that $(x_i=v)$ is a precondition of $a$. It may even be the case that $a$ has no preconditions at all, and thus the ``lower bound'' on an action's precondition is $\emptyset$. 
+    exists in all the pre-states of $a$ may be preconditions of $a$ (hence $\pre(a)\subseteq \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s$).     On the other hand, the fact that a state variable $x_i$ happened to have the same value $v$ in all the pre-states of the observed trajectories does not necessarily mean that $(x_i=v)$ is a precondition of $a$. It may even be the case that $a$ has no preconditions at all, and thus the ``lower bound'' on an action's precondition is $\emptyset$. 
     
     Equations~\ref{eq:eff} holds because a value assignment $(x_i=v)$ cannot be an effect of $a$ if it is not in every post-state of $a$, and thus only value assignments that 
-    exists in all the post-states of $a$ may be preconditions of $a$ (hence $eff(a)\subseteq \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'$). On the other hand, every variable that has a value in the post-state that is different from the pre-state then it must be an effect (hence $\bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s$).
+    exists in all the post-states of $a$ may be preconditions of $a$ (hence $\eff(a)\subseteq \bigcap_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'$). On the other hand, every variable that has a value in the post-state that is different from the pre-state then it must be an effect (hence $\bigcup_{\tuple{s, a, s'}\in \mathcal{T}(a)} s'\setminus s$).
     We omit a formal proof of the above discussion for space constraints, 
-    and denote the ``upper bound'' of the preconditions by $pre_\mathcal{T}^U(a)$ 
-    and the ``lower bound'' of the effects by $eff_\mathcal{T}^L(a)$. 
+    and denote the ``upper bound'' of the preconditions by $\pre_\mathcal{T}^U(a)$ 
+    and the ``lower bound'' of the effects by $\eff_\mathcal{T}^L(a)$. 
     
     
     
     \subsection{Compilation to Classical Planning} 
-    Next, we use the bounds in Equation~\ref{eq:pre} and~\ref{eq:eff} to compile a \cmfp{} problem 
+    Next, we use the bounds in Equations~\ref{eq:pre} and~\ref{eq:eff} to compile a \cmfp{} problem 
     $\Pi_\mathcal{T}=\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G}, \mathcal{T}}$ 
 	to a classical \SAS{} problem $F(\Pi_\mathcal{T})$, such that a solution to $F(\Pi_\mathcal{T})$ 
 	is a solution to $\Pi_\mathcal{T}$, i.e., it is a solution for the underlying planning problem $\Pi$. 
 	$F(\Pi_\mathcal{T})$ is defined as follows. It has exactly the same set of 
 	state variables ($\mathcal{X}$), start state ($s_\mathcal{I}$), and goal ($s_\mathcal{G}$) as $\Pi_\mathcal{T}$. The actions of $F(\Pi_\mathcal{T})$ is the set of all the actions seen in an observed trajectory. We denote this set of actions by $A(\mathcal{T})$. 
 	The preconditions of an action $a$ in  $F(\Pi_\mathcal{T})$ 
-	are defined as the ``upper bound'' estimate given in Equation~\ref{eq:pre} -- $pre_\mathcal{T}^U(a)$ -- and the effects of $a$ in  $F(\Pi_\mathcal{T})$  
+	are defined as the ``upper bound'' estimate given in Equation~\ref{eq:pre} ($\pre_\mathcal{T}^U(a)$) and the effects of $a$ in  $F(\Pi_\mathcal{T})$  
 	are defined to be the ''lower bound'' estimate given in 
-	Equation~\ref{eq:eff} --  $eff_\mathcal{T}^L(a)$.
+	Equation~\ref{eq:eff} ($\eff_\mathcal{T}^L(a)$).
+
+\begin{definition}[Safe]
+	An action model $\mathcal{O}'$ is safe with respect to an action model $\mathcal{O}$
+	if for every state $s$ and action $a$ it holds that (1) if $a$ is applicable in $s$ according to $\mathcal{O}'$ then it is also applicable in $s$ according to $\mathcal{O}$, and (2) applying $a$ to $s$ results in exactly the same state when using either $\mathcal{O}'$ or $\mathcal{O}$. 
+	\label{def:safe}
+\end{definition}
+	
+\begin{theorem}
+	The action model in $F(\Pi_\mathcal{T})$ 
+	is safe with respect to the action model of $\Pi$. 
+	\label{the:safeness}
+\end{theorem}
+\begin{proof}
+	Let $\mathcal{O}_\Pi$ and $\mathcal{O}_{F(\Pi_\mathcal{T})}$ be the action models of $\Pi$ and $F(\Pi_\mathcal{T})$, respectively. 
+	Since $a$ is applicable in $s$ according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$, it means that $\pre_\mathcal{T}^U(a)\subseteq s$ and consequently  $a$ is also applicable in $s$ according to $\mathcal{O}_\Pi$, since $\pre(a)\subseteq \pre_\mathcal{T}^U$ (Equation~\ref{eq:pre}). 
 
 	
-	\begin{theorem}[Soundness]
-		Every solution to $F(\Pi_\mathcal{T})$ is also a solution to $\Pi_\mathcal{T}$
-		\label{the:soundness}
-	\end{theorem}
-	\begin{proof}
-		Since $F(\Pi_\mathcal{T})$ and $\Pi_\mathcal{T}$ share the same
-		state variables, start state, and goal definitions, we only need to show that
-		a plan in $F(\Pi_\mathcal{T})$ is applicable in the underlying planning problem $\Pi$. 
-		Let $\mathcal{O}_\Pi$ and $\mathcal{O}_{F(\Pi_\mathcal{T})}$ be the action models of $\Pi$ and $F(\Pi_\mathcal{T})$, respectively. 
-		We establish next that if an action is applicable 
-		according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$ the it is also applicable 
-		according to $\mathcal{O}_\Pi$ and it will have exactly the same effects. 
-		Let $s$ be a state and let $a$ be an action that is applicable in $s$ according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$. This means that $pre_\mathcal{T}^U(a)\subseteq s$ and consequently  $a$ is also applicable in $s$ according to $\mathcal{O}_\Pi$, since 
-		$pre(a)\subseteq pre_\mathcal{T}^U$. 
-		Now, consider the effects of applying $a$ in $\Pi$. 
-		Let $s'_\Pi$ and $s'_{F(\Pi_\mathcal{T})}$ be the states resulting from applying $a$ on $s$ according to $\mathcal{O}_\Pi$ and $\mathcal{O}_{F(\Pi_\mathcal{T})}$, respectively. 
-		Let $v$ be the value of a state variable $x_i$ in $s'_\Pi$. 
-		Since $eff_\mathcal{T}^U(a)\subseteq eff(a)$, 
-		then according to  $\mathcal{O}_{F(\Pi_\mathcal{T})}$ 
-		either $(x_i=v)$ is an effect of $a$ 
-		or $a$ has no effect on $x_i$. 
-		If the former option is true then $s'_\Pi(x_i)=v=s'_\Pi(x_i)$. 
-		Otherwise, it means that in the observed trajectories applying $a$ 
-		never changed the value of $x_i$, i.e., $x_i$ was equal to $v$ in both pre-state and post-state. By definition, this means that $(x_i=v)$ is a precondition of $a$ 
-		according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$, 
-		and thus $s(x_i)=s'_{F(\Pi_\mathcal{T})}(a)=v=s'_\Pi(a)$. 
-		Thus, the effects of $a$ on $s$ will be the same in both action models, and hence a plan in 
-		$F(\Pi_\mathcal{T})$ is a sound plan for $\Pi$, as required.		
-	\end{proof}
+	Now, let $s'_\Pi$ be the state resulting from applying $a$ on $s$ according to $\mathcal{O}_\Pi$, and let $v$ denote the value of a state variable $x_i$ in $s'_\Pi$, i.e., $v=s'_\Pi(x_i)$. 
+	Since $\eff_\mathcal{T}^U(a)\subseteq \eff(a)$, 
+	then according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$ 
+	either $(x_i=v)$ is an effect of $a$ 
+	or $a$ has no effect on $x_i$. 
+	If the former option is true then $s'_\Pi(x_i)=v=s'_\Pi(x_i)$. 
+	Otherwise, it means that in the observed trajectories applying $a$ 
+	never changed the value of $x_i$, i.e., $x_i$ was equal to $v$ in both pre-state and post-state. By definition, this means that $(x_i=v)$ is a precondition of $a$ 
+	according to $\mathcal{O}_{F(\Pi_\mathcal{T})}$, 
+	and thus $s(x_i)=s'_{F(\Pi_\mathcal{T})}(a)=v=s'_\Pi(a)$. 
+	Thus, the effects of $a$ on $s$ will be the same in both action models, and hence a 
+	$s'_\Pi=s'_{F(\Pi_\mathcal{T})}$. 
+\end{proof}
 \roni{Maybe the above is trivial or too wordy. What do you think?}
-		 
-	The practical implication of Theorem~\ref{the:soundness} is the following algorithm for solving 
-	any \cmfp{} problem $\Pi_\mathcal{T}$: compile it to a classical planning problem 
-	$F(\Pi_\mathcal{T})$, run an off-the-shelf classical planner, and return the resulting plan. 
-	This algorithm is sound, but it is not complete. There can be planning problems 
-	that have a solution but the observed trajectories are not sufficient 
-	so that the corresponding compiled planning problem is not solvable. 
-	As an extreme example, if we do not receive any observed trajectories, 
-	the compiled planning problem will not have any actions in its action model
-	and thus will not be able to solve anything. 
+\begin{corollary}[Soundness]
+	Every solution to $F(\Pi_\mathcal{T})$ is also a solution to $\Pi_\mathcal{T}$
+	\label{the:soundness}
+\end{corollary}
+Corollary~\ref{the:soundness} is a direct result of Theorem~\ref{the:safeness}, 
+and its practical implication is the following algorithm for solving 
+any \cmfp{} problem $\Pi_\mathcal{T}$: compile it to a classical planning problem 
+$F(\Pi_\mathcal{T})$, run an off-the-shelf classical planner, and return the resulting plan. 
+We refer to this algorithm as the {\em conservative model-free planner}. 	
+The {\em conservative model-free planner} is sound, but it is not complete. 
+There can be planning problems 
+that have a solution but the observed trajectories are not sufficient 
+so that the corresponding compiled planning problem is not solvable. 
+As an extreme example, if we do not receive any observed trajectories, 
+the compiled planning problem will not have any actions in its action model
+and thus will not be able to solve anything. 
 In the next section we show that the required number of trajectories is actually reasonable. 
+
+
+
+
+
 	
 	
 
@@ -314,147 +304,135 @@ by running some (unknown, sophisticated) planning algorithm on input $(I,G)$, or
 even a nondeterministic, adversarial choice of trajectory $T(I,G)$ to 
 be paired with the start state $I$ and goal $G$. 
 %We note that this task is conservative in the sense that when an algorithm solving it outputs a plan, the plan is required to be correct. The algorithm may only make errors by failing to find a plan when one exists. %\section{Theoretical Guarantees and Limitations} How many trajectories do we need to guarantee that every plan can be generated?
-A key question is how our certainty that a plan can be generated for a new start and goal state grows with the number of trajectories. Let $\log$ and $\ln$ denote $\log_2$ and $\log_e$, respectively. 
+A key question is how our certainty that a plan can be generated for a new start and goal state grows with the number of trajectories. Let $\log$ and $\ln$ denote $\log_2$ and $\log_e$, respectively, and let $d$ denote the largest number of values
+for a state variable. 
+%Since there are $n$ state variables each with at most $d$ values, 
 \begin{theorem}
-%With probability $1-\delta$, $\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories suffice for solving the model-free planning problem.
-%task of learning to plan.
-%$m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories  suffice for solving the conformant model-free learning-to-plan problem with probability $1-\delta$.
-It is sufficient to observe $m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$ trajectories to solve the conformant model-free learning-to-plan problem with probability $1-\delta$. 
+Using the conservative model-free planner, 
+it is sufficient to observe 
+%$m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
+$m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$
+ trajectories to solve the conformant model-free learning-to-plan problem with probability $1-\delta$. 
 \label{the:pac-conformant}
 \end{theorem}
 %\begin{proof}
 %\MEMO{Question \#1: There is a conceptual hop that I am missing. I understand that there is a distribution of start-goal pairs. But I don't understand the meaning of a distribution over trajectories. A trajectory is not something that follows some distribution, it is something that is computed by some planning process.}
 \begin{proof}
-{\bf Outline.} First, we first prove that the set of actions that exists in the observed trajectories is sufficient to solve a randomly drawn problem with high probability (Lemma~\ref{lem:sufficientActions}). Then, we show that under some conditions of the learned preconditions, they learned actions and preconditions enable finding a plan with high probability (Lemma~\ref{lem:plan-existance}). Finally, we show that these conditions indeed hold when using  conservative model-free planning. 
-%although the set of preconditions we assume is conservative, it is still sufficient to enable finding a plan with high probability. 
+{\bf Outline.} First, Lemma~\ref{lem:sufficientActions} shows 
+that the set of actions used by our conservative model-free planner ($A(\mathcal{T})$) 
+is sufficient to solve a randomly drawn problem with high probability. 
+Then, Lemma~\ref{lem:plan-existance} shows that 
+under certain conditions, the preconditions we learned for these actions ($\pre_\mathcal{L}^U$) 
+are not too conservative, i.e., they are adequate
+for finding a plan with high probability.  
+Finally, we prove that with high probability these conditions over the action model we learned 
+indeed hold. 
+
+
+% (Lemma~\ref{lem:sufficientActions}). Then, we show that under some conditions over the action model we learn is sufficient (i.e., they are not too conservative)t o enable finding a plan with high probability (Lemma~\ref{lem:plan-existance}). Finally, we show that these conditions indeed hold when using  conservative model-free planning. %although the set of preconditions we assume is conservative, it is still sufficient to enable finding a plan with high probability. 
 
 \begin{lemma}
-Let $A_\epsilon$ be the set of actions such that each action $a\in A_\epsilon$ appears in a trajectory sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$ 
-and let $A(\mathcal{T})$ be the set of every action that appeared in a trace. 
-The probability that any action $a\in A_\epsilon$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$.
+Let $A_\epsilon$ be the set of actions such that each action $a\in A_\epsilon$ appears in a trajectory sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$ and let $A(\mathcal{T})$ be the set of every action that appeared in a trace. 
+The probability that all the actions $a\in A_\epsilon$ 
+appear in $A(\mathcal{T})$ is at least $1-\delta/2$.
+%The probability that any action $a\in A_\epsilon$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$.
 \label{lem:sufficientActions}
 \end{lemma}
-\begin{proof-of-claim}
-%Let $A_\epsilon$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, 
-%and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trace. 
-%\MEMO{Question \#2: So $A'$ is the set of actions used in  trajectories in general (with non-negligable probability), and $A(\mathcal{T})$ are the actions in $\mathcal{T}$?}
-%\MEMO{Question \#3: I think we need to assume that the planning process that generated the trajectories is complete.}
-%We first observe that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
-By definition, the probability that an action in $A_\epsilon$ does not exist in a trajectory drawn from $D$ is $1-\frac{\epsilon}{2|A|}$. Since the observed trajectories $\mathcal{T}$ are drawn independently from $D$ we have that the probability that $a\notin A(\mathcal{T})$ is $(1-\frac{\epsilon}{2|A|})^m$. 
+\begin{proof}
+By definition, the probability that an action $a\in A_\epsilon$ does not exist in a trajectory drawn from $D$ is $1-\frac{\epsilon}{2|A|}$. 
+Since the observed trajectories $\mathcal{T}$ are drawn independently from $D$ we have that the probability that $a\notin A(\mathcal{T})$ is
+$(1-\frac{\epsilon}{2|A|})^m\leq e^{-\frac{\epsilon\cdot m}{2|A|}}$, 
+using the inequality $1-x\leq e^{-x}$. 
+Since we assume in Theorem~\ref{the:pac-conformant} that $m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
+which is larger than $\frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$, 
+we have that the probability that $a\notin A(\mathcal{T})$ is at most $\delta/2$ is $(1-\frac{\epsilon}{2|A|})^m$. 
 Using the inequality $1-x\leq e^{-x}$ and 
 the fact that 
-$m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$$>$
-$\frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$, we have that the probability that $a\notin A(\mathcal{T})$ is at most $\delta/2$. Hence, by a union bound over $a\in A_\epsilon$ (noting $|A_\epsilon|\leq |A|$), $A_\epsilon\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
-\end{proof-of-claim}
-
-
-%Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
-%$A(\mathcal{A})$ is will not appear in any observed trajectory Consider an action $a\in A_\epsilon$.
-%\MEMO{Question \#4: I think you meant above and below $\frac{\epsilon}{2|A|}$ and not $\epsilon/2|A|$}
-%Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. 
-%\MEMO{Question \#4: I think there's an extra $|A|$ there: the $\log\frac{2|A|}{\delta}$ should be $\log\frac{2}{\delta}$ Please verify.} My mistake
-%Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
-
-%Let $A'$ be the set of actions that appear in trajectories sampled from $D$ with probability at least $\frac{\epsilon}{2|A|}$%, let $A''$ be the set of actions that appear with probability at least $\frac{\epsilon}{4|A|}$, and let $A(\mathcal{T})$ be the set of actions that appeared in {\em any} trajectory. \roni{Is $A(\mathcal{T})$ referring to any trajectory or only the observed ones?} We first show that the probability that any action $a\in A'$ does not appear in $A(\mathcal{T})$ is at most $\delta/2$. \roni{I am always confused with the term {\em any}. Do you mean that the probability that $A(\mathcal{T})\cap A'=\emptyset$ is at most $\delta/2$?}For any action $a\in A'$, it will not be invoked in a trajectory drawn from $D$ with probability at most $1-\frac{\epsilon}{2|A|}$. 
-%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. 
-%: indeed, fix any action $a\in A'$. We note that $a$ is not invoked in each trajectory drawn from $D$ with probability at most $1-\epsilon/2|A|$. Thus, since our trajectories are drawn independently from $D$, the probability that $a$ does not appear in $A(\mathcal{T})$ is $(1-\frac{\epsilon}{2|A|})^m$. Thus, using $1+x\leq e^x$ inequality, the probability that $a\notin A(\mathcal{T})$ is less than ${e^{-\frac{\epsilon}{2|A|}}}^m$. Since $m\geq \frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$, we have that the probability that $a\notin A(\mathcal{T})$ is less than less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
-
-%$\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
-
-
-%is $(1-\epsilon/2|A|)^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$.
-%is $(1-\frac{\epsilon}{2|A|})^m$ where $m > \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$. Thus, using $1+x\leq e^x$, the probability that $a\notin A(\mathcal{T})$ is less than $\delta/2|A|$, and hence by a union bound over $a\in A'$ (noting $|A'|\leq |A|$), $A'\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
-The action model we are learning is fundamentally an assignment of preconditions to actions. We call such an assignment of preconditions {\em unsafe} (for $A(\mathcal{T})$) if at least one term in at least one of the preconditions for at least one of the actions is missing. We will call an assignment of preconditions {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, there is an action $a\in A_\epsilon$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ is not satisfied. 
-
-\begin{lemma}
-%If the preconditions of the learned action model are neither unsafe nor inadequate, then for a start-goal pair $(I,G)$ sampled from $D$, there is a plan for $(I,G)$ that only uses actions in $A_\epsilon$ with probability of at least  $1-\epsilon/2$.
-If $A_\epsilon\subseteq A(\mathcal{T})$ and the preconditions of the learned action model are neither unsafe nor inadequate, then for a start-goal pair $(I,G)$ sampled from $D$, with probability $1-\epsilon$ there is a plan for $(I,G)$ that only uses actions in $A(\mathcal{T})$, that in particular will be found by our conservative model-free planner.
-\label{lem:plan-existance}
-\end{lemma}
-\begin{proof-of-claim}
-%We prove Lemma~\ref{lem:plan-existance} in two steps: (1) showing that there exists a plan using only actions in $A_\epsilon$ with probabiltiy higher than $1-\epsilon/2$, and (2) showing that the conservative preconditions are satisfied in that plan with probability higher than (1) only uses actions in $A_\epsilon$ and (2) the conservative preconditions learned from $\mathcal{T}$ for these actions are satisfied. By negation, assume that the probability of sampling a start-goal pair $(I,G)$ for which  all trajectories use an action not in $A_\epsilon$ is higher than $\epsilon/2$. This means that the probability of sampling a trajectory for such a start-goal pairs is also higher than $\epsilon/2$. However, the probability of sampling a trajectory that uses an action not in $A_\epsilon$ is at most  $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$ (by definition of $A_\epsilon$).
-First, observe that for an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, then for $(I,G)$ taken from $(I,G,T)$ sampled from $D$, with probability $1-\epsilon/2$ there is a plan for $(I,G)$ that only uses actions in $A_\epsilon$: in particular for the full triple $(I,G,T)$, the (unknown) $T$ uses an action outside $A_\epsilon$ with probability at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$.
-Likewise since the preconditions are not inadequate for $A_\epsilon$, with probability $1-\epsilon/2$ the specified preconditions are satisfied on all of the states in which the corresponding action is used in the unknown trajectory; thus, by a union bound, we find that with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A_\epsilon\subseteq A(\mathcal{T})$.
-Moreover, since the assignment of preconditions to actions is not unsafe, if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisfied. 
-\end{proof-of-claim}
-
-
-%Observe that if we can find an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, then for $(I,G)$ sampled from $D$, with probability $1-\epsilon/2$ there is a plan for $(I,G)$ that only uses actions in $A_\epsilon$ since in particular, the corresponding, unknown trajectory uses an action outside $A_\epsilon$ with probability at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$, and likewise since the preconditions are not inadequate for $A'$, with probability $1-\epsilon/2$ the specified preconditions are satisfied on all of the states in which the corresponding action is used in the unknown trajectory; thus, with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A_\epsilon\subseteq A(\mathcal{T})$ (where containment holds with probability $1-\delta/2$, as established above). Moreover, since the assignment of preconditions to actions is not unsafe, if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisified. 
-
-It thus suffices to argue that the algorithm finds an assignment of preconditions to actions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$. We first observe that there are $2^{|A||P|}$ candidate preconditions over $|P|$ for our $|A|$ actions. Now, the subset $BAD$ of these assignments of preconditions that are inadequate for at least one action $a\in A_\epsilon$ in particular has size at most $2^{|A||P|}$. We note that any particular inadequate assignment cannot be produced as output by the algorithm if we draw a trajectory in which for one of the actions in $a\in A_\epsilon$ the precondition assigned to $a$ by that inadequate assignment is not satisfied on one of the states in the trajectory in which $a$ is invoked. Note that by the definition of inadequacy, for each example trajectory drawn, such a state appears with probability at least $\epsilon/2$. Therefore, the probability that no state appears in our $m$ independently drawn trajectories is at most $(1-\epsilon/2)^m$. Concretely, since $m\geq\frac{(2ln 2)|A|}{\epsilon}(|P|+\log\frac{2|A|}{\delta})>\frac{2\ln 2}{\epsilon}(|A||P|+\log\frac{2}{\delta})$, this is at most $\delta/2^{|A||P|+1}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
-
-
-%We next observe that by a Chernoff bound, the probability that an action $a\in A'$ does not appear in at least an $\epsilon/3|A|$-fraction of the $m$ example trajectories is at most $\exp(-\frac{1}{2}36m\frac{\epsilon}{2|A|})<\delta/2|A|$, and that the probability that an action $a\notin A''$ appears in at least a $\epsilon/3|A|$-fraction of the example trajectories is at most $\exp(-\frac{1}{3}144m\frac{\epsilon}{4|A|})<\delta/2|A|$. Thus by a union bound over the (at most $|A|$) actions in $A'$ or outside $A''$, with probability $1-\delta/2$, all of the actions in $A'$ appear in sufficiently many of the trajectories that our estimates are adequate and no action outside $A''$ appears so often.
-
-We finally note that the algorithm cannot produce unsafe preconditions for $A(\mathcal{T})$: indeed, observe that the preconditions are satisfied for every action invoked in every trajectory obtained by the algorithm. Since the algorithm includes all of the literals that are satisfied on all of the states in which that action was invoked, in particular it includes all of the literals that actually appear in the precondition. Thus, with probability $1-\delta$, the algorithm indeed produces an assignment of preconditions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, as needed.
+%$m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$$>$
+$m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$$>$
+$\frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$, we have that the probability that $a\notin A(\mathcal{T})$ is at most
+\begin{equation}
+e^{-\frac{\epsilon\cdot m}{2|A|}}
+\leq e^{-\frac{\epsilon}{2|A|} \cdot \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}}
+=e^{-\ln\frac{2|A|}{\delta}}=\frac{\delta}{2|A|}
+\end{equation}
+Hence, by a union bound over $a\in A_\epsilon$ (noting $|A_\epsilon|\leq |A|$), we have that $A_\epsilon\subseteq A(\mathcal{T})$ with probability $1-\delta/2$ as needed.
 \end{proof}
 
-\section{Beyond the Known Effects Case}
-The above analysis holds for the ``Known Effects'' case, i.e., where observing an action in a trajectory reveals the effects of that action. As discussed above this case is true when both of the following conditions hold:
-(1) if a fact $f$ is a delete effect of an action $a$ then 
-$f$ must also be a pre-condition of $a$, and
-(2) if a fact $f$ is an add effect of an action $a$ then 
-$f$ must not be true in the state before applying $a$. 
-These conditions are reasonable in some domains but less so in others. In this section we show how to compile a domain that does not have these properties to a domain where these properties exist.
-Then, we use this compilation to extend Theorem~\ref{the:pac-conformant} to the general case (beyond the known effects case). 
+Stated informally, Lemma~\ref{lem:sufficientActions} says that with high probability we will observe
+all the ``useful'' actions, i.e., the actions used in many trajectories. However, we may have learned 
+preconditions for these actions that are too conservative, 
+preventing the planner from finding a plan even if such exists. 
+The next definition defines an action model property that states that this does not occur frequently. 
+
+% the execution of actions in states where they in fact can be executed. Due to Theorem~\ref{the:safeness} we know that observed actions will be associated with a safe action model. Still, the preconditions learned for the observed actions may be too restrictive, i.e., prevent the execution of actions in states where they in fact can be executed. 
+
+\begin{definition}[Adequate]
+We call an action model {\em adequate} if, with probability at most $\epsilon/2$, we sample a trajectory $T$ from $D$ such that $T$ contains an action triplet $\tuple{s,a,s'}$  where $a\in A_\epsilon$ and $s$ does not satisfy $\pre_\mathcal{T}^U$. 
+%We call an action model {\em inadequate} if, with probability at least $\epsilon/2$  we sample a trajectory $T$ from $D$ such that $T$ contains an action triplet $\tuple{s,a,s'}$  where $a\in A_\epsilon$ and $s\nsubseteq\pre_\mathcal{T}^U$. 
+\label{def:adequate}
+\end{definition}
+We say that an action model is {\em inadequate} if it is not adequate. 
+An equivalent way to define the notion of an {\em adequate} action model is
+that with probability at most $\epsilon/2$ 
+a trajectory is sampled in which an action $a\in A_\epsilon$ is invoked on a state that 
+does not satisfy the conservative preconditions of $a$ we learned from the given set of trajectories ($\mathcal{T}$).  
 
 
-% The compilation
-An action for which the above two conditions hold is referred to as a {\em regular} action. The ``Known Effects'' case is when all actions in a planning domain are regular. 
-Let $\mathcal{D}=(P,A)$ be a planning domain that contains actions that are not regular. We show next how to create a planning domain $\mathcal{D}_R$ that is regular and is equivalent to $\mathcal{D}$. 
-
-The set of actions in $\mathcal{D}_R$ contain all the regular actions in $\mathcal{D}$. Addititional actions are added to represent the functionality of the non-regular actions in $\mathcal{D}$, as follows. Let $a$ be an action in $\mathcal{D}$ that is not regular. There are two (not mutually exclusive) reasons why $a$ is not regular. Either it has one or more facts that are delete effects but are not in $pre(a)$, or that it has one or more facts that are add effects and may exists in a state in which $pre(a)$ holds. 
-
-Consider first the former option, where there's a fact $f$ that is a delete effect of $a$ and not in $pre(a)$. For such a case, we add to $\mathcal{D}_R$ two actions: $a_{f+}$ and $a_{f-}$, defined as follows:
-\begin{itemize}
-    \item $a_{f+}$ is equivalent to $a$, except that it has $f$ as a precondition. 
-    \item $a_{f-}$ is equivalent to $a$, except that it has $\neg f$ as a precondition and does not have $f$ as a delete effect.
-\end{itemize}
-
-Similarly, for the case where $f$ is an add effect of $a$ but can be true in a state where $pre(a)$ are true, we create two actions $a_{f+}$ and $a_{f-}$, defined as follows. 
-
-\begin{itemize}
-    \item $a_{f+}$ is equivalent to $a$, except that it has $f$ as a precondition and does not have $f$ as an add effect.
-    \item $a_{f-}$ is equivalent to $a$, except that it has $\neg f$ as a precondition.
-\end{itemize}
-
-It is easy to see that $\mathcal{D}_R$ is equivalent to $\mathcal{D}$ in terms of the set of plans that can be generated in it. However, this compilation is costly, since the number of actions in this regular domain can be much larger than that of $\mathcal{D}$. Specifically, if an action $a$ has two facts that cause $a$ to be non-regular, then we will have four actions to represent $a$ in $\mathcal{D}_R$. In general if we have $n$ facts that cause $a$ to be non-regular this would result in $2^n$ actions in $\mathcal{D}_R$ to represent them.
-
-\MEMO{Roni:I'm not sure how this goes into formula the theorem}
+\begin{lemma}
+	If the learned action model is adequate and $A_\epsilon\subseteq A(\mathcal{T})$, 
+	then with probability $1-\epsilon$ our conservative model-free planner will find a plan for a start-goal pair $(s_\mathcal{I},s_\mathcal{G})$ sampled from $D$.
+	\label{lem:plan-existance}
+\end{lemma}
+\begin{proof}
+	Let $T$ be the (unknown) trajectory sampled for $(s_\mathcal{I},s_\mathcal{G})$. 
+	The probability that $T$ uses an action that is not in 
+	$A_\epsilon$ is at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$. 
+	Thus, $T$ contains only actions known to our planner with probability at least $1-\epsilon/2$, since we assumed that $A_\epsilon\subseteq A(\mathcal{T})$. 
+	Since the action model is adequate then with probability $1-\epsilon/2$ the learned preconditions are satisfied on all of the states in $T$. Thus, by a union bound, we find that with probability $1-\epsilon$, our planner will find a trajectory from $s_\mathcal{I}$ to $s_\mathcal{G}$, as required. 
+\end{proof}
 
 
-
-\subsection{The Learning Algorithm}
-The observed trajectories may be from non-regular domains. 
-
-We will learn different copies of the action $a$. 
-Whenever we observe that $a$ has a different set of effects
-than the set observed so far, 
-
-
-Issues with the above solution: 
-
-(1) we now add the option to have $\neg f$ as a pre-condition. This makes some of the above problematic. I think we can hack it by adding some new facts. 
-
-(2) does it make the complexity of learning much higher
-
-(3) 
-
-\subsection{Post Meeting insights}
-
-1. Approach \#1 to handle effects: include negative facts as pre-conditions
-This means that every fact that does not exists in a state 
-is initially assumed to be a negative pre-conditions. 
-This way, we can safely learn effects, because we know that 
-the facts in the add effects and the facts in the delete Effects
-have  really been observed as added/deleted [[need to prove this but sounds Ok]]
-
-2. Approach \#2 to handle effects: not include negative facts as pre-conditions
-and do the action splitting approach from above. 
+%In Theorem~\ref{the:safeness} we established that the action model used by our conservative model-free planner is safe. 
+Finally, we argue that the action model used by our conservative model-free planner is adequate with probability at least $1-\delta/2$. 
+Whether an action model is adequate or not depends on the assignment of preconditions to actions. 
+Since there are $n$ state variables each with at most $d$ values, 
+then there are $d^n$ possible assignments of preconditions for an individual action
+and a total of $d^{n\cdot |A|}$ possible preconditions assignments for an action model . 
+Let $BAD$ be the subset of these action model preconditions assignments that are not adequate. 
+Clearly, $BAD$ has size of at most $d^{n\cdot |A|}$. 
 
 
-3. The need for a distribution over the trajectories is needed
-to define probabilities over action selections. 
+Consider a particular preconditions assignment of an inadequate action model $\mathcal{O}_{BAD}$. Since $\mathcal{O}_{BAD}$ is inadequate, 
+it has a set of state-action pairs ($s,a$) associated with it such that $a\in A_\epsilon$ and $a$ cannot be applied to $s$ according to $\mathcal{O}_{BAD}$. 
+The action model $\mathcal{O}_{BAD}$ can only be learned by our algorithm 
+if none of these state-action pairs were observed in the given trajectories $\mathcal{T}$. 
+On the other hand, by the definition of inadequacy
+the probability of having a state-action pair from that list 
+in a trajectory drawn from $D$ is at least $\epsilon/2$. 
+Thus, the probability that our algorithm will learn a particular preconditions assignment of an inadequate action model is at most $(1-\epsilon/2)^m$.
+Since $m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})>\frac{2\ln d}{\epsilon}(|A|\cdot n+\log\frac{2}{\delta})$, then $(1-\epsilon/2)^m$ is smaller than 
+
+%\begin{equation}
+%e^{-\frac{\epsilon}{2} \cdot m}\leq 
+%e^{-(\ln 2 \cdot (|A||P|+\log\frac{2}{\delta}))}
+%=e^{-\ln 2 \cdot |A||P|}\cdot e^{-\ln  \frac{2}{\delta}}=\frac{\delta}{2^{|A||P|}}
+%\leq e^{-\frac{\epsilon}{2|A|} \cdot \frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}}
+%=e^{-\ln\frac{2|A|}{\delta}}=\frac{\delta}{2|A|}
+%\end{equation}
+
+
+\begin{equation}
+e^{-\frac{\epsilon}{2} \cdot m}
+\leq 
+e^{-(\ln d \cdot (|A|\cdot n+\log\frac{2}{\delta}))}
+=e^{-\ln d \cdot |A|\cdot n}\cdot e^{-\ln  \frac{2}{\delta}}
+%=\frac{\delta}{d^{n\cdot |A|}}
+\end{equation}
+which is at most $\delta/d^{n\cdot |A|}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
+%We finally note that the algorithm cannot produce unsafe preconditions for $A(\mathcal{T})$: indeed, observe that the preconditions are satisfied for every action invoked in every trajectory obtained by the algorithm. Since the algorithm includes all of the literals that are satisfied on all of the states in which that action was invoked, in particular it includes all of the literals that actually appear in the precondition. 
+Thus, with probability $1-\delta$, the algorithm indeed produces an assignment of preconditions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, as needed.
+\end{proof}
 
 
 \section{Related Work}
@@ -505,15 +483,6 @@ An exception to this is the work of Walsh and Littman~\shortcite{walsh2008effici
 %Walsh and Littman~\shortcite{walsh2008efficientLearning} also discuss the problem of learning STRIPS operators from observed trajectories. They too interleave planning and execution: they learn an action model, find a plan for a given planning problem, and update that action model by the success or failure of the generated plan. 
 
 
-\section{Topics to mention or discuss}
-In the \SAS{} formalism we considered, the effects and preconditions 
-are just sets of value assignments $x_i=v$. However, more involved 
-action models can assign a value to one state variable 
-that is a function of the values of other state variables, 
-e.g., $x_i=s(x_j) xor s(x_k)$. This is not covered in this work
-but maybe we can learn simple assignments in these cases and bound how bad this will be?
-Or, alternatively, search in the space of possible formulaes for a compact representation
-that matches the observations and say something about this also.  
 
 \section{Conclusions}
 This paper deals with a planning problem in which the planner agent does not know the agent's actions. Instead of an action model, the planner is given a set of observed trajectories of successfully executed plans. 
@@ -523,7 +492,7 @@ In this setting we introduce the {\em conformant model-free planning} problem, i
 
 
 We show how to use the given set of trajectories to learn
-information about the agent's actions, bounding the set of predicates in the actions'  preconditions and effects. Then, we propose a solution to the conformant model-free problem that is based on a translation to standard conformant planning. The solution is sound but is not complete, as it may fail to find a solution even if one exists. We prove that under some assumptions the likelihood of finding a solution with this approach grows linearly with the number of predicates and quasi-linearly with the number of actions. 
+information about the agent's actions, bounding the set of predicates in the actions'  preconditions and effects. Then, we propose a conservative approach to solve the conformant model-free problem that is based on a translation to a classical planning problem. This solution is sound but is not complete, as it may fail to find a solution even if one exists. However, we prove that under some assumptions the likelihood of finding a solution with this approach grows linearly with the number of predicates and quasi-linearly with the number of actions. 
 
 
 Future directions for conformant model-free planning include studying how to relax the simplifying assumptions made about the action's effects, how to consider richer underlying planning models including parametric actions, conditional effects, stochastic action outcomes, and partial observability.  

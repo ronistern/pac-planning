@@ -236,3 +236,229 @@ In the rest of this paper we focus on the case of known effects and address the 
 % If we know the effects then it is a classical planning problem, but still incomplete
 
 % What's the probability that is complete
+
+
+
+
+\section{Beyond the Known Effects Case}
+The above analysis holds for the ``Known Effects'' case, i.e., where observing an action in a trajectory reveals the effects of that action. As discussed above this case is true when both of the following conditions hold:
+(1) if a fact $f$ is a delete effect of an action $a$ then 
+$f$ must also be a pre-condition of $a$, and
+(2) if a fact $f$ is an add effect of an action $a$ then 
+$f$ must not be true in the state before applying $a$. 
+These conditions are reasonable in some domains but less so in others. In this section we show how to compile a domain that does not have these properties to a domain where these properties exist.
+Then, we use this compilation to extend Theorem~\ref{the:pac-conformant} to the general case (beyond the known effects case). 
+
+
+% The compilation
+An action for which the above two conditions hold is referred to as a {\em regular} action. The ``Known Effects'' case is when all actions in a planning domain are regular. 
+Let $\mathcal{D}=(P,A)$ be a planning domain that contains actions that are not regular. We show next how to create a planning domain $\mathcal{D}_R$ that is regular and is equivalent to $\mathcal{D}$. 
+
+The set of actions in $\mathcal{D}_R$ contain all the regular actions in $\mathcal{D}$. Addititional actions are added to represent the functionality of the non-regular actions in $\mathcal{D}$, as follows. Let $a$ be an action in $\mathcal{D}$ that is not regular. There are two (not mutually exclusive) reasons why $a$ is not regular. Either it has one or more facts that are delete effects but are not in $pre(a)$, or that it has one or more facts that are add effects and may exists in a state in which $pre(a)$ holds. 
+
+Consider first the former option, where there's a fact $f$ that is a delete effect of $a$ and not in $pre(a)$. For such a case, we add to $\mathcal{D}_R$ two actions: $a_{f+}$ and $a_{f-}$, defined as follows:
+\begin{itemize}
+	\item $a_{f+}$ is equivalent to $a$, except that it has $f$ as a precondition. 
+	\item $a_{f-}$ is equivalent to $a$, except that it has $\neg f$ as a precondition and does not have $f$ as a delete effect.
+\end{itemize}
+
+Similarly, for the case where $f$ is an add effect of $a$ but can be true in a state where $pre(a)$ are true, we create two actions $a_{f+}$ and $a_{f-}$, defined as follows. 
+
+\begin{itemize}
+	\item $a_{f+}$ is equivalent to $a$, except that it has $f$ as a precondition and does not have $f$ as an add effect.
+	\item $a_{f-}$ is equivalent to $a$, except that it has $\neg f$ as a precondition.
+\end{itemize}
+
+It is easy to see that $\mathcal{D}_R$ is equivalent to $\mathcal{D}$ in terms of the set of plans that can be generated in it. However, this compilation is costly, since the number of actions in this regular domain can be much larger than that of $\mathcal{D}$. Specifically, if an action $a$ has two facts that cause $a$ to be non-regular, then we will have four actions to represent $a$ in $\mathcal{D}_R$. In general if we have $n$ facts that cause $a$ to be non-regular this would result in $2^n$ actions in $\mathcal{D}_R$ to represent them.
+
+\MEMO{Roni:I'm not sure how this goes into formula the theorem}
+
+
+
+\subsection{The Learning Algorithm}
+The observed trajectories may be from non-regular domains. 
+
+We will learn different copies of the action $a$. 
+Whenever we observe that $a$ has a different set of effects
+than the set observed so far, 
+
+
+Issues with the above solution: 
+
+(1) we now add the option to have $\neg f$ as a pre-condition. This makes some of the above problematic. I think we can hack it by adding some new facts. 
+
+(2) does it make the complexity of learning much higher
+
+(3) 
+
+\subsection{Post Meeting insights}
+
+1. Approach \#1 to handle effects: include negative facts as pre-conditions
+This means that every fact that does not exists in a state 
+is initially assumed to be a negative pre-conditions. 
+This way, we can safely learn effects, because we know that 
+the facts in the add effects and the facts in the delete Effects
+have  really been observed as added/deleted [[need to prove this but sounds Ok]]
+
+2. Approach \#2 to handle effects: not include negative facts as pre-conditions
+and do the action splitting approach from above. 
+
+
+3. The need for a distribution over the trajectories is needed
+to define probabilities over action selections. 
+
+
+
+
+\section{Topics to mention or discuss}
+In the \SAS{} formalism we considered, the effects and preconditions 
+are just sets of value assignments $x_i=v$. However, more involved 
+action models can assign a value to one state variable 
+that is a function of the values of other state variables, 
+e.g., $x_i=s(x_j) xor s(x_k)$. This is not covered in this work
+but maybe we can learn simple assignments in these cases and bound how bad this will be?
+Or, alternatively, search in the space of possible formulaes for a compact representation
+that matches the observations and say something about this also.  
+
+
+
+
+
+
+The action model we are learning ($\mathcal{O}_{F(\Pi_\mathcal{T})}$) is fundamentally an assignment of preconditions and effects to actions, where preconditions and effects are assignments of values to state variables (i.e., of the form $x_i=v$). We call such an assignment {\em unsafe} if 
+there is an action $a$ that is missing a precondition, 
+or if there is an action that has an extra effect, where ``missing'' and ``extra'' 
+is with respect to the action model of the underlying planning problem ($\Pi$). 
+We will call an assignment of action model {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, 
+there is an action $a\in A_\epsilon$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ in our conservative model-free planner is not satisfied. 
+
+
+
+
+has a precondition $x_i=v$ according to $\mathcal{O}_\Pi$ 
+but 
+
+of 
+if its contains an action 
+whose preconditions is not athat is missing a precondition
+
+, or an action that has an effect (where ``missing'' and ``incorrect'' is with respect to the action model of the underlying planning problem $\Pi$). 
+
+
+that has  exists an action 
+
+We will call an action model {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, 
+there is an action $a\in A_\epsilon$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ in our conservative model-free planner is not satisfied. 
+
+
+
+We call an action model {\em unsafe} 
+if a planner that uses it may create plans that are not applicable in the underlying planning problem $\Pi$. An action model is {\em inadequate} if with non-negligible probability 
+a planner that uses it will not find a plan even if such exists. 
+Put formally, an action model is unsafe if there is an action 
+that is missing a precondition or an action  that has an incorrect effect (where ``missing'' and ``incorrect'' is with respect to the action model of the underlying planning problem $\Pi$). 
+An action is inadequate 
+
+has a precondition 
+$\mathcal{O}$ is unsafe w.r.t an action model $\mathcal{O}_\Pi$
+if either $\exists a\in A ~ \pre_(a)$
+
+with non-negligible probability
+
+a planner that uses it may
+
+using it leads to plansa state that is not reachable 
+
+
+it can lead 
+if there exists an action $a$ such that 
+there is a
+according to $\mathcal{O}$ 
+We will call an assignment of preconditions {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, 
+there is an action $a\in A_\epsilon$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ in our conservative model-free planner is not satisfied. 
+
+(for $A(\mathcal{T})$) 
+if at least one term  in at least one of the preconditions 
+for at least one of the actions is missing. 
+We will call an assignment of preconditions {\em inadequate} if, with probability at least $\epsilon/2$ over trajectories $T$ sampled from $D$, 
+there is an action $a\in A_\epsilon$ and a state where $a$ is invoked in $T$ such that the precondition we assign to $a$ in our conservative model-free planner is not satisfied. 
+
+
+\roni{If space is an issue then we can ommit the unsafe part, as it is discussed before}
+
+
+
+\begin{lemma}
+	If $A_\epsilon\subseteq A(\mathcal{T})$ and the learned action model is adequate, then for a start-goal pair $(s_\mathcal{I},s_\mathcal{G})$ sampled from $D$, with probability $1-\epsilon$ there is a plan for $(s_\mathcal{I},s_\mathcal{G})$ that only uses actions in $A(\mathcal{T})$ and that plan will be found by our conservative model-free planner.
+	%, that in particular will be found by our conservative model-free planner.
+	\label{lem:plan-existance}
+\end{lemma}
+\begin{proof} 
+	Let $T$ be the (unknown) trajectory sampled for $(s_\mathcal{I},s_\mathcal{G})$. 
+	%We prove Lemma~\ref{lem:plan-existance} by showing that  	with probability at most $\epsilon/2$ the trajectory $T$ contains an action that was not observed in a trajectory (i.e., we did not learn about its existence)  	and with probability at most $\epsilon/2$ the actions in $T$ cannot be applied due to our conservative precondition learning. 
+	The probability that $T$ uses an action that is not in 
+	$A_\epsilon$ is at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$. 
+	Conversely, with probability higher than $1-\epsilon/2$, there exists a trajectory from   $s_\mathcal{I}$ to $s_\mathcal{G}$ that only uses actions in $A_\epsilon/2$. 
+	
+	Since the action model is adequate then with probability $1-\epsilon/2$ the learned preconditions are satisfied on all of the states in $T$. Thus, by a union bound, we find that with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A_\epsilon\subseteq A(\mathcal{T})$.
+	Moreover, since the assignment of preconditions to actions is safe (Theorem~\ref{the:safeness}), if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisfied.
+	
+	
+	
+	
+	
+	First, observe that for an assignment of preconditions to actions that is adequate for $A_\epsilon$, then for $(s_\mathcal{I},s_\mathcal{G})$ taken from $(s_\mathcal{I},s_\mathcal{G},T)$ sampled from $D$, with probability $1-\epsilon/2$ there is a plan for $(s_\mathcal{I},s_\mathcal{G})$ that only uses actions in $A_\epsilon$: in particular for the full triple $(s_\mathcal{I},s_\mathcal{G},T)$, the (unknown) $T$ uses an action outside $A_\epsilon$ with probability at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$.
+	Likewise since the preconditions are adequate for $A_\epsilon$, with probability $1-\epsilon/2$ the specified preconditions are satisfied on all of the states in which the corresponding action is used in the unknown trajectory; thus, by a union bound, we find that with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A_\epsilon\subseteq A(\mathcal{T})$.
+	Moreover, since the assignment of preconditions to actions is safe (Theorem~\ref{the:safeness}), if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisfied.
+	
+	
+	
+	
+	
+	
+	
+	First, observe that for an assignment of preconditions to actions that is adequate for $A_\epsilon$, then for $(s_\mathcal{I},s_\mathcal{G})$ taken from $(s_\mathcal{I},s_\mathcal{G},T)$ sampled from $D$, with probability $1-\epsilon/2$ there is a plan for $(s_\mathcal{I},s_\mathcal{G})$ that only uses actions in $A_\epsilon$: in particular for the full triple $(s_\mathcal{I},s_\mathcal{G},T)$, the (unknown) $T$ uses an action outside $A_\epsilon$ with probability at most $|A|\cdot\frac{\epsilon}{2|A|}=\epsilon/2$.
+	Likewise since the preconditions are adequate for $A_\epsilon$, with probability $1-\epsilon/2$ the specified preconditions are satisfied on all of the states in which the corresponding action is used in the unknown trajectory; thus, by a union bound, we find that with probability $1-\epsilon$, the plan in the trajectory is a solution to the planning task in which the actions are restricted to $A_\epsilon\subseteq A(\mathcal{T})$.
+	Moreover, since the assignment of preconditions to actions is safe (Theorem~\ref{the:safeness}), if we only use actions in $A(\mathcal{T})$, whenever our precondition for $a\in A(\mathcal{T})$ is satisfied for a state in our trajectory, the real precondition is also satisfied. 
+\end{proof}
+
+
+
+
+
+contains an action tr
+By Moreover, the probability of sampling a trajectory 
+It has a set of state and action pairs that 
+
+Our algorithm may output this inadequate action model if 
+the given trajectories $\mathcal{T}$ do not contain any action triple ($s,a,s'$) 
+
+
+Since the action model is inadequate, then with probability $\epsilon/2$ 
+we will draw a trajectory that contains an action triple ($s,a,s'$) 
+in which $a\in A_\epsilon$ and it cannot be applied 
+
+
+it has a set of actions $A_{BAD}\subseteq A_\epsilon$ for which 
+
+This assignment cannot be outputted by our algorithm 
+We note that the action model we learn cannot be not adequate 
+
+any particular inadequate assignment cannot be produced as output by the algorithm if we draw a trajectory in which for one of the actions in $a\in A_\epsilon$ the precondition assigned to $a$ by that inadequate assignment is not satisfied on one of the states in the trajectory in which $a$ is invoked. 
+Consider the probability that we have learned an action model with a precondition assignment from this set ($BAD$). 
+
+By the definition of adequacy, if the action model is adequate then 
+we will 
+i state in which an action cannot be applied appears in a trajectory with probability at least $\epsilon/2$. 
+
+in each example trajectory drawn, 
+
+
+such a state appears with probability at least $\epsilon/2$. Therefore, the probability that no state appears in our $m$ independently drawn trajectories is at most $(1-\epsilon/2)^m$. Concretely, since $m\geq\frac{(2ln 2)|A|}{\epsilon}(|P|+\log\frac{2|A|}{\delta})>\frac{2\ln 2}{\epsilon}(|A||P|+\log\frac{2}{\delta})$, this is at most $\delta/2^{|A||P|+1}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
+
+
+
+We note that any particular inadequate assignment cannot be produced as output by the algorithm if we draw a trajectory in which for one of the actions in $a\in A_\epsilon$ the precondition assigned to $a$ by that inadequate assignment is not satisfied on one of the states in the trajectory in which $a$ is invoked. Note that by the definition of inadequacy, for each example trajectory drawn, such a state appears with probability at least $\epsilon/2$. Therefore, the probability that no state appears in our $m$ independently drawn trajectories is at most $(1-\epsilon/2)^m$. Concretely, since $m\geq\frac{(2ln 2)|A|}{\epsilon}(|P|+\log\frac{2|A|}{\delta})>\frac{2\ln 2}{\epsilon}(|A||P|+\log\frac{2}{\delta})$, this is at most $\delta/2^{|A||P|+1}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
+
+
+
