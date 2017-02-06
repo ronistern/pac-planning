@@ -63,6 +63,11 @@
 \newcommand{\cmfp}{conformant model-free planning}
 \newcommand{\eff}{\textit{eff}}
 \newcommand{\pre}{\textit{pre}}
+\newcommand{\solvable}{\textit{S}}
+\newcommand{\plannable}{\textit{P}}
+\newcommand{\true}{\textit{T}}
+\newcommand{\false}{\textit{$\bot$}}
+
 
 \setlength{\pdfpagewidth}{8.5in} \setlength{\pdfpageheight}{11in}
 %\pdfinfo{
@@ -91,7 +96,7 @@
 
 
 \begin{document}
-\title{Model-Free Contingent Planning}
+\title{Model-Free Conformant Planning}
 
 \author{Submission \#85}
 
@@ -99,11 +104,12 @@
 
 \begin{abstract}%\vspace{-0.2cm}
 In this paper we explore the theoretical boundaries of 
-performing contingent planning in a setting where 
+conformant planning in a setting where 
 there is no model of the agent's actions. 
-Instead of an action model, a set of trajectories used by successfully executed actions are given and the task is to generate a plan that is guaranteed
-to achieve the goal without failing. 
-We propose to address this problem by learning a conservative model of the world, in which actions are guaranteed to be applicable, and generating a plan with this conservative model by casting it as a conformant planning problem and using an off-the-shelf conformant planning algorithm. This approach is sound but may be incomplete, not finding plans even in cases when they exist. 
+Instead of an action model, a set of successfully executed plans are given and the task is to generate a plan that is guaranteed to achieve the goal without failing. 
+To this end we propose to learn a conservative model of the world, in which actions are guaranteed to be applicable. This conservative model is then given to an off-the-shelf classical planner, resulting in a plan that is guaranteed to achieve the goal. 
+Our reduction from a model-free planning problem to a model-based planning problem 
+is sound but not complete, not finding plans even in cases when they exist. 
 Then, we analyze theoretically the probabilistic relation between the number of observed trajectories and the likelihood that our conservative approach will indeed fail to solve a solvable problem. Our analysis show that the number of trajectories needed scales gracefully. 
 \end{abstract}
 
@@ -433,6 +439,37 @@ which is at most $\delta/d^{n\cdot |A|}$. Thus, by a union bound over this set o
 %We finally note that the algorithm cannot produce unsafe preconditions for $A(\mathcal{T})$: indeed, observe that the preconditions are satisfied for every action invoked in every trajectory obtained by the algorithm. Since the algorithm includes all of the literals that are satisfied on all of the states in which that action was invoked, in particular it includes all of the literals that actually appear in the precondition. 
 Thus, with probability $1-\delta$, the algorithm indeed produces an assignment of preconditions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, as needed.
 \end{proof}
+
+\subsection{Unsolvable Instances}
+
+The implication of Theorem~\ref{the:pac-conformant} is that by observing 
+a number of trajectories that is linear in the number of actions and the number of state variables, 
+we expect our conformant model-free planner to be complete with high probability, in the sense that if a solution exists it will be found. But what will our planner output if it is given an unsolvable instance? Since our planner is sound (Corollary~\ref{the:soundness}), it will never output a false plan. But what can be said when our planner outputs that no solution has been found?
+An ideal planner would only output that if it is given an unsolvable instance. We cannot hope to guarantee this for the model-free setting, as there is always some probability that to solve a given instance we need to use an action that was never used in any of the given trajectories. However, we can bound the probability that this will occur. 
+
+\begin{corollary}
+	Let $\mu$ be the probability of drawing a problem instance that is not solvable. 
+	After observing $m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$
+	trajectories, the probability that our conservative model-free planning problem
+	will output that no plan exists when such does exist 
+	is at most $1-\frac{\mu}{\mu-(1-\mu)\cdot\delta}$ 
+\end{corollary}
+\begin{proof}
+	Let $\solvable(\Pi)$ be true or false if  a given planning problem $\Pi$ is solvable or unsolvable, respectivley, 
+	and let $\plannable(\Pi)$ be true or false if our planner returns a solution to $\Pi$ or not respectively. We aim to bound the probability that $\Pi$ is solvable given that the planner did not return a solution to $\Pi$. 
+	\[  Pr(\solvable(\Pi)|\plannable(\Pi)=\false)=1-Pr(\solvable(\Pi)=\false|\plannable(\Pi)=\false) \]
+	Using Bayes rule, we have that $Pr(\solvable(\Pi)=\false|\plannable(\Pi)=\false)$ is equal to 
+	\[ 	Pr(\plannable(\Pi)=\false|\solvable(\Pi)=\false)\cdot \frac{Pr(\solvable(\Pi)=\false)}{Pr(\plannable(\Pi)=\false)} \]
+	Since our planner is sound $Pr(\plannable(\Pi)=\false|\solvable(\Pi)=\false)=1$. 
+	By definition $Pr(\solvable(\Pi)=\false)=\mu$. Our planner outputs no solution in one of two cases: either the problem is unsolvable ($\mu$) or in the cases where 
+	the problem is solvable ($1-\mu$) and our planner did not find a plan, which occurs 
+	in at most $\delta$ of the cases (Theorem~\ref{the:pac-conformant}). Thus, $Pr(\plannable(\Pi)=\false$ is at most $\mu_(1-\mu)\cdot \delta$. Putting all these values 
+	results in 
+	$Pr(\solvable(\Pi)=\true|\plannable(\Pi)=\false)\leq 1-\frac{\mu}{\mu-(1-\mu)\cdot\delta}$ as required.
+\end{proof}
+Note that by increasing $m$ we can decrease $\delta$, and consequently decrease the probability
+that our planner will output that no plan exists when such does. 
+
 
 
 \section{Related Work}
