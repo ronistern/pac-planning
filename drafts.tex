@@ -462,3 +462,62 @@ We note that any particular inadequate assignment cannot be produced as output b
 
 
 
+
+
+
+
+
+Corollary~\ref{cor:unsolvable} and the values in Table~\ref{tab:probabilities} can be used to 
+The values in the table can be used to bound other meaningful events. E.g., $\solvable(\Pi)|\neg\plannable(\Pi)$ 
+Note that $\neg\plannable(\Pi)|\solvable(\Pi)$
+$\solvable(\Pi)|\neg\plannable(\Pi)$ 
+represents two types of errors: the first for 
+
+
+Corollary~\ref{cor:unsolvable} is valuable in that it provides a relationship between $\mu$, $\epsilon$, $\delta$, and $m$, and we can increase $m$ to satisfy more demanding values of $\mu$, $\epsilon$, and $\delta$. For example, say
+that instead of having a $(1-\epsilon)\cdot\mu$ probability (as in Corollary~\ref{cor:unsolvable})of finding a solution we want a probability of $1-\epsilon$. Then we simply modify $\epsilon$ in the sample complexity accordingly, i.e., require 
+
+
+
+
+
+
+if we require the probability of wrongly outputting that no plan exists 
+
+
+to bound the probability that our planner . s useful as it also allows to control the probability of bounding the probability 
+But what will our planner output if it is given an unsolvable instance? Since our planner is sound (Corollary~\ref{the:soundness}), it will never output a false plan. But what can be said when our planner outputs that no solution has been found?
+An ideal planner would only output that if it is given an unsolvable instance. We cannot hope to guarantee this for the model-free setting, as there is always some probability that to solve a given instance we need to use an action that was never used in any of the given trajectories. However, we can bound the probability that this will occur. 
+
+\begin{corollary}
+	Let $\mu$ be the probability of drawing a problem instance that is not solvable. 
+	It is sufficient to observe $m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$
+	trajectories to solve the conformant model-free learning-to-plan problem with probabilty $1-\delta$, and have this planner incorrectly output that no plan exists with probability of at most $\epsilon$. 
+\end{corollary}
+\begin{proof}
+	Let $\solvable(\Pi)$ be true or false if  a given planning problem $\Pi$ is solvable or unsolvable, respectively, 
+	and let $\plannable(\Pi)$ be true or false if our planner returns a solution to $\Pi$ or not respectively. We aim to bound the probability that $\Pi$ is solvable given that the planner did not return a solution to $\Pi$. 
+	\[  Pr(\solvable(\Pi)|\neg\plannable(\Pi))
+	=\frac{Pr(\solvable(\Pi)\wedge \neg\plannable(\Pi))}{Pr(\neg\plannable(\Pi))}\]
+	
+	Assume first that $m$ is larger than required in Theorem~\ref{the:pac-conformant}. This means that
+	with probability of at least $1-\delta$ our planner will fail to find a solution to a solvable instance with probability $1-\epsilon$. in  ($Pr(\plannable(\Pi)|\solvable(\Pi)$) 
+	
+	\[  Pr(\solvable(\Pi)|\neg\plannable(\Pi))
+	=1-Pr(\neg \solvable(\Pi)|\neg\plannable(\Pi)) \]
+	Using Bayes rule, we have that $Pr(\neg\solvable(\Pi)|\neg\plannable(\Pi))$ is equal to 
+	\[ 	Pr(\neg\plannable(\Pi)|\neg\solvable(\Pi))\cdot \frac{Pr(\neg\solvable(\Pi))}{Pr(\neg\plannable(\Pi))} \]
+	Since our planner is sound $Pr(\neg\plannable(\Pi)|\neg\solvable(\Pi))=1$. 
+	By definition $Pr(\neg\solvable(\Pi))=\mu$. 
+	To compute $Pr(\neg\plannable(\Pi))$ we sum 
+	$Pr(\solvable(\Pi)|\neg\plannable(\Pi))$ and
+	$Pr(\neg\solvable(\Pi)|\neg\plannable(\Pi))$.
+	Our planner outputs no solution in one of two cases: either the problem is unsolvable ($\mu$) or in the cases where 
+	the problem is solvable ($1-\mu$) and our planner did not find a plan, which occurs 
+	in at most $\delta$ of the cases (Theorem~\ref{the:pac-conformant}). Thus, $Pr(\plannable(\Pi)=\false$ is at most $\mu_(1-\mu)\cdot \delta$. Putting all these values 
+	results in 
+	$Pr(\solvable(\Pi)=\true|\plannable(\Pi)=\false)\leq 1-\frac{\mu}{\mu-(1-\mu)\cdot\delta}$ as required.
+\end{proof}
+Note that by increasing $m$ we can decrease $\delta$, and consequently decrease the probability
+that our planner will output that no plan exists when such does. 
+
