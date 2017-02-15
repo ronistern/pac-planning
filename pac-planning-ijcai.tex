@@ -153,7 +153,7 @@
 	
 	\section{Problem Definition}
 	The setting we address is a a STRIPS planning domain, represented 
-	using the \SAS{} formalism~\cite{backstrom}. 
+	using the \SAS{} formalism~\cite{backstrom1995complexity}. 
 	A planning domain in SAS$+$ is defined by the tuple $\mathcal{D}=\tuple{\mathcal{X}, \mathcal{O}}$, where 
 	\begin{itemize}
 		\item $\mathcal{X}=\{x_1,\ldots, x_n\}$ is a set of state variables, each associated with a finite domain $Dom(x_i)$. 
@@ -176,7 +176,7 @@
 		A trajectory $T=\langle s_1, a_1, s_2, a_2, \ldots, a_{n-1}, s_n\rangle$ is an alternating sequence of states ($s_1,\ldots,s_n$) and actions ($a_1,\ldots,a_n$) that starts and ends with a state. 
 	\end{definition}
 	A trajectory represents a successful execution of a sequence of actions by the agent. A set of trajectories may be obtained, for example, by monitoring the acting agent when it is controlled manually by a human operator. The states in the given trajectories are assumed to be fully observable. 
-	\roni{Brendan, maybe we can think about what to do if we don't know the action names. Then, we can ``create'' actions, and maybe this will be more compact than the real actions? this can be pretty cool}
+	%\roni{Brendan, maybe we can think about what to do if we don't know the action names. Then, we can ``create'' actions, and maybe this will be more compact than the real actions? this can be pretty cool}
 	
 	Finally, we can define the {\em conformant model-free planning} problem, which is the focus of this work. 
 	
@@ -263,7 +263,7 @@
 		Thus, the effects of $a$ on $s$ will be the same in both action models, and hence a 
 		$s'_\Pi=s'_{F(\Pi_\mathcal{T})}$. 
 	\end{proof}
-	\roni{Maybe the above is trivial or too wordy. What do you think?}
+	%\roni{Maybe the above is trivial or too wordy. What do you think?}
 	\begin{corollary}[Soundness]
 		Every solution to $F(\Pi_\mathcal{T})$ is also a solution to $\Pi_\mathcal{T}$
 		\label{the:soundness}
@@ -285,7 +285,8 @@
 	
 	\begin{figure*}
 		\includegraphics[width=\textwidth]{example_cropped.pdf}
-	\caption{An example of creating $F(\Pi_{\mathcal{T}})$ from observed trajectories in a simple logistic-like domain.}
+	\caption{An example of creating $F(\Pi_{\mathcal{T}})$ from observed trajectories in a simple logistic-like domain. The left-hand side of the figure shows the three given trajetories $T_1$, $T_2$, and $T_3$. The right hand side of the figure shows our conservative action model, 
+		learned using different subsets of the trajectories $T_1$, $T_2$, and $T_3$ together.}
 	\label{fig:example}
 	\end{figure*}
 	
@@ -293,9 +294,15 @@
 	
 	Figure~\ref{fig:example} illustrates how to generate  $F(\Pi_{\mathcal{T}})$ from observed trajectories in a simple logistic-like domain with one truck, one package, and three possible location $A$, $B$, and $C$. The state variables are TruckAt, with domain $A$, $B$, and $C$, and PackageAt with domain $A$, $B$, $C$, and $T$, where $T$ represents that the package is on the truck. The possible actions are Move$_{X,Y}$, 
 	Pickup$_X$, and Unload$_X$, for every $X,Y\in \{A,B,C\}$. 
+	
+	
+	
 	The three tables on the left-hand side, $T_1$, $T_2$, and $T_3$ are three observed trajectories, where the column $T$ represents the value of the state variable TruckAt and the column $P$ represents the value of the state variable PackageAt. For example, $T_1$ represents a trajectory where the truck starts at $A$, moves to $B$, picks up the package, moves to $C$, and unloads the package there. 	The tables on the right-hand side of Figure~\ref{fig:example} show the action model learned from these trajectories. For didactic reasons, we show the action model learned given just $T_1$ ($F(\Pi_{\{T_1\}})$), 
 	then the action model learned given $T_1$ and $T_2$ ($F(\Pi_{\{T_1, T_2\}})$), and finally 
-	the action model learned using all three trajectories. As can be observed, given only $T_1$ we do not have any knowledge of many actions such as Pick$_A$, Pick$_C$, etc. Also, the preconditions learned for the actions Move$_{A,B}$ 
+	the action model learned using all three trajectories. 
+	
+	
+	As can be observed, given only $T_1$ we do not have any knowledge of many actions such as Pick$_A$, Pick$_C$, etc. Also, the preconditions learned for the actions Move$_{A,B}$ 
 	and Move$_{B,C}$ are too restrictive, requiring that the package is at some location (while clearly a Move action only requires knowing the truck's location). However, given $T_1$ and $T_2$, these redundant preconditions are removed, and thus task that can be achieved with the actions Move$_{A,B}$, Move$_{B,C}$, Pick$_B$, and Unload$_C$ will be found by our conservative model-free planner. 
 	
 	
