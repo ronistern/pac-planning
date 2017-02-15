@@ -283,10 +283,20 @@
 	In the next section we show that the required number of trajectories is actually reasonable. 
 	
 	
+	\begin{figure*}
+		\includegraphics[width=\textwidth]{example_cropped.pdf}
+	\caption{An example of creating $F(\Pi_{\mathcal{T}})$ from observed trajectories in a simple logistic-like domain.}
+	\label{fig:example}
+	\end{figure*}
 	
 	
 	
-	
+	Figure~\ref{fig:example} illustrates how to generate  $F(\Pi_{\mathcal{T}})$ from observed trajectories in a simple logistic-like domain with one truck, one package, and three possible location $A$, $B$, and $C$. The state variables are TruckAt, with domain $A$, $B$, and $C$, and PackageAt with domain $A$, $B$, $C$, and $T$, where $T$ represents that the package is on the truck. The possible actions are Move$_{X,Y}$, 
+	Pickup$_X$, and Unload$_X$, for every $X,Y\in \{A,B,C\}$. 
+	The three tables on the left-hand side, $T_1$, $T_2$, and $T_3$ are three observed trajectories, where the column $T$ represents the value of the state variable TruckAt and the column $P$ represents the value of the state variable PackageAt. For example, $T_1$ represents a trajectory where the truck starts at $A$, moves to $B$, picks up the package, moves to $C$, and unloads the package there. 	The tables on the right-hand side of Figure~\ref{fig:example} show the action model learned from these trajectories. For didactic reasons, we show the action model learned given just $T_1$ ($F(\Pi_{\{T_1\}})$), 
+	then the action model learned given $T_1$ and $T_2$ ($F(\Pi_{\{T_1, T_2\}})$), and finally 
+	the action model learned using all three trajectories. As can be observed, given only $T_1$ we do not have any knowledge of many actions such as Pick$_A$, Pick$_C$, etc. Also, the preconditions learned for the actions Move$_{A,B}$ 
+	and Move$_{B,C}$ are too restrictive, requiring that the package is at some location (while clearly a Move action only requires knowing the truck's location). However, given $T_1$ and $T_2$, these redundant preconditions are removed, and thus task that can be achieved with the actions Move$_{A,B}$, Move$_{B,C}$, Pick$_B$, and Unload$_C$ will be found by our conservative model-free planner. 
 	
 	
 	
