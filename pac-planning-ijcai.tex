@@ -570,17 +570,12 @@ The first row shows the probabilities
 	
 	
 	\section{Conclusions}
-	This paper deals with a planning problem in which the planner agent has no knowledge about its actions. Instead of an action model, the planner is given a set of observed trajectories of successfully executed plans. 
-	
-	
-	In this setting we introduced the {\em conformant model-free planning} problem, in which the task is to find a plan that is guaranteed to reach the goal, i.e., there is no tolerance for execution failure. This type of problem is important in cases where failure is costly or in cases where the agent has no capability to replan during execution. 
-	
-	
+	This paper deals with a planning problem in which the planner agent has no knowledge about its actions. Instead of an action model, the planner is given a set of observed trajectories of successfully executed plans. 	In this setting we introduced the {\em conformant model-free planning} problem, in which the task is to find a plan that is guaranteed to reach the goal, i.e., there is no tolerance for execution failure. This type of problem is important in cases where failure is costly or in cases where the agent has no capability to replan during execution. 
 	We showed how to use the given set of trajectories to learn
 	about the agent's actions, bounding the set of predicates in the actions'  preconditions and effects. Then, we proposed a conservative approach to solve the conformant model-free problem that is based on a translation to a classical planning problem. This solution is sound but is not complete, as it may fail to find a solution even if one exists. However, we prove that under some assumptions the likelihood of finding a solution with this approach grows linearly with the number of predicates and quasi-linearly with the number of actions. 
 	
 	
-	Future directions for conformant model-free planning include studying how to relax the simplifying assumptions made about the action's effects, how to consider richer underlying planning models including parametric actions, conditional effects, stochastic action outcomes, and partial observability. While some of these more complex action models can be compiled away (e.g., a problem with conditional effects can be compiled to a problem without conditional effects~\cite{nebel2000compilability}), the resulting problem can be significantly larger.   
+	Future directions for conformant model-free planning include studying how to consider richer underlying planning models including parametrized actions, conditional effects, stochastic action outcomes, and partial observability. While some of these more complex action models can be compiled away (e.g., a problem with conditional effects can be compiled to a problem without conditional effects~\cite{nebel2000compilability}), the resulting problem can be significantly larger.   
 	
 	
 	%Another future direction will consider cases where the given planning problem is not solvable.
