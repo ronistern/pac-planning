@@ -106,8 +106,9 @@
 		\end{minipage}
 } }
 
-
-\title{Model-Free Conformant Planning}
+\title{Efficient, Safe, and Probably Approximately Complete Learning of Action Models}
+%Roni, feel free to change the title. This errs on the side of bloodless accuracy. 
+%\title{Model-Free Conformant Planning}
 \author{Submission \#1365}
 
 \begin{document}
@@ -130,7 +131,15 @@
 	
 	% Domain modeling is hard and so people try to automated this
 	Creating a planning domain model for an agent, and in general knowledge engineering, is notoriously hard. %\roni{Brendan, if you have a nice reference for this?} 
-	Thus, a well-studied approach is to learn a domain model by observing the agent's prior interactions with the environment, and by guiding the agent towards performing exploratory actions. A popular approach to planning without a domain model in {\em reinforcement learning} even skips the model-learning phase and directly learns how to act from observing the agent's past actions and observations~\cite[e.g.]{kearns2002}.  
+	Lenat~\shortcite{lenat1995} gave a nice overview of the many challenges in knowledge engineering that were encountered during the CYC project.
+	Thus, a well-studied approach is to learn a domain model by observing the agent's prior interactions with the environment, and by guiding the agent towards performing exploratory actions. A popular approach to planning without a domain model in {\em reinforcement learning} even skips the model-learning phase and directly learns how to act from observing the agent's past actions and observations, e.g.~\cite{kearns2002}. 
+
+	The problems that arise in such approaches are also frequently intractable, even in their simplest forms.
+	For example, learning to predict labels computed by finite-state machines~\cite{kearns1994} or even DNF formulas~\cite{daniely2016} is believed to be intractable. 
+	Similarly, even the problems of finding memoryless policies~\cite{littman1994} or finite-state policies~\cite{meuleau1999} in simple environments is intractable.
+	Finally, in the standard interactive learning model, simple examples (that would be captured by a STRIPS environment, for example) are known that force a learner to explore an exponential number of paths in any reasonable measure of the environment's complexity~\cite[Section 8.6]{kakade2003}.
+	Thus, we shall limit our attention to the learning of STRIPS domain models in a PAC (``Probably Approximately Correct'') sense that we introduce in this work, described in Section~\ref{problemdef-sec}.%
+	\footnote{Actually, in general STRIPS planning is also known to be intractable~\cite{bylander1994,erol1995}, so our difficulties do not end once we have obtained a domain model. Nevertheless, broad families of STRIPS planning problems can be solved efficiently in practice.}
 	
 	
 	% We are different: only positive examples, and we really want to succeed
@@ -152,7 +161,7 @@
 	
 	
 	
-	\section{Problem Definition}
+	\section{Problem Definition}\label{problemdef-sec}
 	The setting we address is a a STRIPS planning domain, represented 
 	using the \SAS{} formalism~\cite{backstrom1995complexity}. 
 	A planning domain in SAS$+$ is defined by the tuple $\mathcal{D}=\tuple{\mathcal{X}, \mathcal{O}}$, where 
@@ -331,11 +340,11 @@
 	%\MEMO{Roni: Do we really need the distribution of $(I,G,T)$  and cannot assume only a distribution of ($I,G$)?  I think it will be cleaner to only talk about $D$ inthe proof of Theorem 1  and don't have it in the definition or theorem.}
 	We stress that $D$ is arbitrary, and in particular the conditional distribution
 	of trajectories given a start and goal state, $D(T|s_{\mathcal{I}},s_{\mathcal{G}})$, is completely 
-	arbitrary. Even if $D(T|s_{\mathcal{I}},s_{\mathcal{G}})$ produces a deterministic outcome $T(s_{\mathcal{I}},s_{\mathcal{G}})$, this
-	still captures, for example, the distribution of trajectories obtained
-	by running some (unknown, sophisticated) planning algorithm on input $(s_{\mathcal{I}},s_{\mathcal{G}})$.
-	It also captures a nondeterministic, adversarial choice of trajectory $T(s_{\mathcal{I}},s_{\mathcal{G}})$ to 
+	arbitrary. For example, $D$ could be the distribution of trajectories obtained
+	by running some (unknown, sophisticated) planning algorithm on input $(s_{\mathcal{I}},s_{\mathcal{G}})$, or produced by hand by a human domain expert. 
+	More generally, the adversarial choice of $D$ in our model subsumes a model in which a trajectory $T(s_{\mathcal{I}},s_{\mathcal{G}})$ is nondeterministically and adversarially chosen to
 	be paired with the start state $s_{\mathcal{I}}$ and goal $s_{\mathcal{G}}$. 
+	(Indeed, the distributions used in such a case satisfy the stronger restriction that $D(T|s_{\mathcal{I}},s_{\mathcal{G}})$ produces a deterministic outcome $T(s_{\mathcal{I}},s_{\mathcal{G}})$, which does not necessarily hold in our model.)
 	%We note that this task is conservative in the sense that when an algorithm solving it outputs a plan, the plan is required to be correct. The algorithm may only make errors by failing to find a plan when one exists. %\section{Theoretical Guarantees and Limitations} How many trajectories do we need to guarantee that every plan can be generated?
 	A key question is how our certainty that a plan can be generated for a new start and goal state grows with the number of trajectories. Let $\log$ and $\ln$ denote $\log_2$ and $\log_e$, respectively, and let $d$ denote the largest number of values
 	for a state variable. 
@@ -580,6 +589,9 @@ The first row shows the probabilities
 	
 	%Another future direction will consider cases where the given planning problem is not solvable.
 	%Note that we cannot distinguish between cases where our planner outputted that no solution has been found from cases where indeed there are no solution. Future work can study and analyze the probability of such cases.
+	
+	\section*{Acknowledgements}
+	B.~Juba was partially supported by an AFOSR Young Investigator Award.
 	
 	%% The file named.bst is a bibliography style file for BibTeX 0.99c
 	\bibliographystyle{named}
