@@ -1,7 +1,7 @@
 
 %%%% ijcai17.tex
 
-\typeout{Model-Free Conformant Planning}
+\typeout{Safe Model-Free Planning}
 
 % These are the instructions for authors for IJCAI-17.
 % They are the same as the ones for IJCAI-11 with superficical wording
@@ -72,7 +72,7 @@
 \newcommand{\arastar}{ARA$^*$}
 \newcommand{\open}{\textsc{Open}}
 \newcommand{\closed}{\textsc{Closed}}
-\newcommand{\cmfp}{conformant model-free planning}
+\newcommand{\cmfp}{safe model-free planning}
 \newcommand{\eff}{\textit{eff}}
 \newcommand{\pre}{\textit{pre}}
 \newcommand{\solvable}{\textit{S}}
@@ -109,7 +109,15 @@
 \title{Efficient, Safe, and Probably Approximately Complete Learning of Action Models}
 %Roni, feel free to change the title. This errs on the side of bloodless accuracy. 
 %\title{Model-Free Conformant Planning}
-\author{Submission \#1365}
+\author{Roni Stern 
+\\ Ben Gurion University of the Negev 
+\\ Be'er Sheva, Israel
+\\ roni.stern@gmail.com
+\And Brendan Juba 
+\\ Washington University in St. Louis
+\\ St. Louis, MO, 63130 USA
+\\ bjuba@wustl.edu
+}
 
 \begin{document}
 	
@@ -117,47 +125,83 @@
 	
 	\begin{abstract}
 		In this paper we explore the theoretical boundaries of 
-		conformant planning in a setting where 
-		there is no model of the agent's actions. 
-		Instead of an action model, a set of successfully executed plans are given and the task is to generate a plan that is guaranteed to achieve the goal without failing. 
-		To this end we propose to learn a conservative model of the world, in which actions are guaranteed to be applicable. This conservative model is then given to an off-the-shelf classical planner, resulting in a plan that is guaranteed to achieve the goal. 
-		Our reduction from a model-free planning problem to a model-based planning problem is sound but not complete, not finding plans even in cases when they exist. 
-		Then, we analyze theoretically the probabilistic relation between the number of observed trajectories and the likelihood that our conservative approach will indeed fail to solve a solvable problem. Our analysis show that the number of trajectories needed scales gracefully.
+		planning in a setting where there is no model of the agent's actions. 
+		Instead of an action model, a set of successfully executed plans are 
+		given and the task is to generate a plan that is {\em safe}, i.e., guaranteed to achieve the goal without failing. 
+		To this end, we show how to learn a conservative model of the world 
+		in which actions are guaranteed to be applicable. 
+		This conservative model is then given to an off-the-shelf classical planner, 
+		resulting in a plan that is guaranteed to achieve the goal. 
+		However, this reduction from a model-free planning to a 
+		model-based planning is not complete: in some cases 
+		a plan will not be found even when such exists. 
+		We analyze the relation between the number of observed plans 
+		and the likelihood that our conservative approach will indeed fail to solve a solvable problem. Our analysis show that the number of trajectories needed scales gracefully.
 	\end{abstract}
 	
 	\section{Introduction}
 	% Planning problems
-	In classical planning problems, a model of the acting agent and its relation to the relevant world is given in a formal planning description language, e.g., the classical STRIPS model~\cite{fikes1971strips} or PDDL~\cite{mcdermott1998pddl}. Planning algorithms (planners) use this model to generate a plan for achieving a given goal condition. 
-	
+	In classical planning problems, a model of the acting agent and its relation to the relevant world is given in a formal planning description language, e.g., the classical STRIPS model~\cite{fikes1971strips} or PDDL~\cite{mcdermott1998pddl}. Planning algorithms (planners) use this model to generate a plan for achieving a given goal condition. 	
 	% Domain modeling is hard and so people try to automated this
-	Creating a planning domain model for an agent, and in general knowledge engineering, is notoriously hard. %\roni{Brendan, if you have a nice reference for this?} 
+	Creating a planning domain model, however, is
+	acknowledged as a notoriously hard knowledge engineering task.  
+	%creating a planning domain model for an agent, and in general knowledge engineering, is notoriously hard. % Missing a connection between these two sentence. Maybe ``For example?''
 	Lenat~\shortcite{lenat1995} gave a nice overview of the many challenges in knowledge engineering that were encountered during the CYC project.
-	Thus, a well-studied approach is to learn a domain model by observing the agent's prior interactions with the environment, and by guiding the agent towards performing exploratory actions. A popular approach to planning without a domain model in {\em reinforcement learning} even skips the model-learning phase and directly learns how to act from observing the agent's past actions and observations, e.g.~\cite{kearns2002}. 
-
-	The problems that arise in such approaches are also frequently intractable, even in their simplest forms.
-	For example, learning to predict labels computed by finite-state machines~\cite{kearns1994} or even DNF formulas~\cite{daniely2016} is believed to be intractable. 
-	Similarly, even the problems of finding memoryless policies~\cite{littman1994} or finite-state policies~\cite{meuleau1999} in simple environments is intractable.
-	Finally, in the standard interactive learning model, simple examples (that would be captured by a STRIPS environment, for example) are known that force a learner to explore an exponential number of paths in any reasonable measure of the environment's complexity~\cite[Section 8.6]{kakade2003}.
-	Thus, we shall limit our attention to the learning of STRIPS domain models in a PAC (``Probably Approximately Correct'') sense that we introduce in this work, described in Section~\ref{problemdef-sec}.%
-	\footnote{Actually, in general STRIPS planning is also known to be intractable~\cite{bylander1994,erol1995}, so our difficulties do not end once we have obtained a domain model. Nevertheless, broad families of STRIPS planning problems can be solved efficiently in practice.}
+	% Is this reference for general knowledge engineering or for planning?
+	
+	% Past work in a nutshell: either learn a model, which is hard computationally, or learn to plan directly. 
+	A well-studied approach to address this is to learn a domain model by observing the agent's  interactions with the environment, and by guiding the agent towards performing exploratory actions. The problems that arise in such approaches, however, are frequently intractable~\cite{kearns1994,daniely2016}. An alternative approach
+	that is frequently used in {\em reinforcement learning} is to skip the model-learning phase and directly learns how to act from observing the agent's past actions and observations~\cite[inter alia]{kearns2002}. In most prior work, the agent may fail to execute a planned action. When this occurs, the agent replans, possibly refining an underlying domain or action model it has learned. Thus, the agent learns from both positive and negative examples. 
 	
 	
-	% We are different: only positive examples, and we really want to succeed
-	In most prior work, the plans generated by the agent may fail, in which case the agent will replan, possibly refining an underlying domain model it has learned. Thus, the agent learns from both positive and negative examples. In this work we address a different setting, in which execution failure is very costly and must be avoided. Furthermore, an agent may have limited computational capabilities, and thus might not have the capability to re-plan after the plan it has tried to execute has failed. 
-	Consider, for example, a team of nano-bots deployed inside a human body for medical target identification and drug delivery~\cite{cavalcanti2007nanorobot}. Re-planning is likely not possible in such nano-bots, and, of course, failing to cure the disease is undesirable. Thus, the planning task we focus on in this paper is how to find a plan that is guaranteed to achieve the goal, in a setting where a domain model is not available. We call this problem the {\em conformant model-free planning problem}. 
+	
+	%Thus, a well-studied approach is to learn a domain model by observing the agent's  interactions with the environment. , and by guiding the agent towards performing exploratory actions. A popular approach to planning without a domain model in {\em reinforcement learning} even skips the model-learning phase and directly learns how to act from observing the agent's past actions and observations, e.g.~\cite{kearns2002}. 
+	
+	% We are different: only positive examples, and we really want to succeed.
+	In this work we address a different setting, in which such execution failures must be avoided. This setting is relevant when execution failures are very costly 
+	or when the agent has limited computation capabilities, 
+    and thus does not have the capability to re-plan after the plan it has tried to execute has failed.
+    % Roni: these are two different motivations for our work: one is that the robot is too expensive and fragile to allow failures, and the other is that replanning during execution is not allowed.	
+	Consider, for example, a team of nano-bots deployed inside a human body for medical target identification and drug delivery~\cite{cavalcanti2007nanorobot}. Re-planning is likely not possible in such nano-bots, and, of course, failing to cure the disease is undesirable. Thus, the planning task we focus on in this paper is how to find a that is {\em safe}, i.e., is guaranteed to achieve the goal, in a setting where a domain model is not available. We call this problem the {\em safe model-free planning problem}. 
+	
+		%Furthermore, an agent may have limited computational capabilities, and thus might not have the capability to re-plan after the plan it has tried to execute has failed. [[Roni: this is an alternative motivaiton, not another assumpiton we are making, so I differentiated the two]]
 	
 	
 	% Our approach 
+	Since performing actions that might fail is not allowed, exploration actions 
+	cannot be performed. The only source of information available is a set of 
+	{\em trajectories} of previously executed plans. 
 	First, we show how to learn a set of actions that the agent can use from the given trajectories. 
-	For every such action $a$, we bound the set of predicates that are $a$'s preconditions and effects. This bounded action model is then used  to construct a conformant planning problem such that a solution to it is a solution to our model-free problem. This approach to solve the model-free planning problem 
-	is sound and can be very efficient, since many conformant planning algorithms exist in the literature~\cite{palacios2009compiling,hoffmann2006conformant}. 
-	However, it is not complete, as the conformant planning problem might not be solvable even if the underlying model-free planning problem is. Nonetheless, we prove that under some assumptions, the probability of this occurring decreases quasi-linearly with the number of observed trajectories. %\MEMO{I think it is better to say something more accurate than ``quickly''. How do you say in English taht something grows in a $n\cdot logn$ manner? super-linearly?}
+	For every such action $a$, we bound the set of predicates that are $a$'s preconditions and effects. This bounded action model is then used  to construct a classical planning problem such that a solution to it is a solution to our model-free problem. This approach to solve the model-free planning problem 
+	is sound and can be very efficient, since current classical planners are very efficient.   
+	However, it is not complete, as the planning problem that uses the learned action model might not be solvable even if the underlying model-free planning problem is. 
+	Nonetheless, we prove that under some assumptions, the probability of this occurring decreases quasi-linearly with the number of observed trajectories. 
+	
+	
+	
+	%\roni{I moved this part from earlier in the intro to here for several reasons: (1) it is too technical to "hit" the reader with it so early, and (2) we want to get the reader "faster" to our problem and approach. I hope this is OK with you.]]
+	This positive result comes in contrast to the hardness of other model-learning tasks. 
+	For example, learning to predict labels computed by finite-state machines~\cite{kearns1994} or even DNF formulas~\cite{daniely2016} is believed to be computationally intractable. Thus, we cannot hope to predict the values that fluents will take merely on the basis of the fact that these can be computed by a finite-state machine or a DNF. 
+		Similarly, even the problems of finding memoryless policies~\cite{littman1994} or finite-state policies~\cite{meuleau1999} in simple environments is computationally intractable. Finally, in the standard interactive learning model, simple examples (that would be captured by a STRIPS environment, for example) are known to force a learner to explore an exponential number of paths in any reasonable measure of the environment's complexity~\cite[Section 8.6]{kakade2003}.
+		
+
+The key difference between the model learning we propose and these hardness results is in that limit our attention to the learning of STRIPS domain models in a PAC (``Probably Approximately Correct'') sense: we do not aim to learn an accurate action model, only one that is sufficient for finding a safe plan in most cases. We introduce and desribe this PAC-like setting in Section~\ref{problemdef-sec}.%
+	%\footnote{Actually, in general STRIPS planning is also known to be intractable~\cite{bylander1994,erol1995}, so our difficulties do not end once we have obtained a domain model. Nevertheless, broad families of STRIPS planning problems can be solved efficiently in practice.}[I removed the poly-time argument, so to avoid this footnote}
+	 
+	 
+	% We will give provably polynomial-time algorithms for the problem of learning a domain model, so obviously none of these problems poses an insurmountable barrier; nevertheless, we wish to highlight the many pitfalls that one may encounter. 	For example, learning to predict labels computed by finite-state machines~\cite{kearns1994} or even DNF formulas~\cite{daniely2016} is believed to be computationally intractable. Thus, we cannot hope to predict the values that fluents will take merely on the basis of the fact that these can be computed by a finite-state machine or a DNF. 
+	%\roni{Intractable in terms of the sample complexity, right?}     \brendan{No, the above is computational -- see clarification}	\roni{The relation between this example and our problem is not easy to follow for a classical planning person like me.} 	\brendan{I tried to clarify the connection -- let me know if it's OK}\roni{Thi is great, I now understand - thanks!}.
+
+	
+	
+	%\MEMO{I think it is better to say something more accurate than ``quickly''. How do you say in English taht something grows in a $n\cdot logn$ manner? super-linearly?}
 	%We note that the contributionswhile the proposed solution this short paper lays the theoretical framework for model-free planning
 	
 	%In this paper we introduce a theoretical framework for learning a partial classical planning model from a given set of observed trajectories, and how to plan using these observed trajectoriesin a way that will ensure the goal is achieved. 
 	
 	
 	%[[TAKEN FROM "Planning and Learning under Uncertainty" Ph.D. thesis of Sergio Jimenez Celorrio ]] In deterministic and totally observable environments this problem has been well studied. The LIVE system [92] learns operators with quantified variables while exploring the world. The EXPO system [45] refines incomplete planning operators when the monitoring of a plan execution detects a divergence between internal expectations and external observations. [98] learns PRODIGY operators from the execution traces of the resulting solutions or execution failures. The TRAIL system [6] limits its operators to an extended version of Horn clauses so that ILP can be applied. The LOPE system [41] proposed an integrated framework for learning, planning and executing actions
+	
 	
 	
 	
@@ -188,26 +232,27 @@
 	A trajectory represents a successful execution of a sequence of actions by the agent. A set of trajectories may be obtained, for example, by monitoring the acting agent when it is controlled manually by a human operator. The states in the given trajectories are assumed to be fully observable. 
 	%\roni{Brendan, maybe we can think about what to do if we don't know the action names. Then, we can ``create'' actions, and maybe this will be more compact than the real actions? this can be pretty cool}
 	
-	Finally, we can define the {\em conformant model-free planning} problem, which is the focus of this work. 
+	Finally, we can define the {\em safe model-free planning} problem, which is the focus of this work. 
 	
-	\begin{definition}[Conformant Model-free planning]
+	\begin{definition}[Safe model-free planning]
 		Let $\Pi=\tuple{\tuple{\mathcal{X},\mathcal{O}},s_\mathcal{I}, s_\mathcal{G}}$ be a planning 
 		problem and let $\mathcal{T}=\{\mathcal{T}^1,\ldots,\mathcal{T}^m\}$ be a set of trajectories in 
 		the planning domain $\tuple{\mathcal{X},\mathcal{O}}$. 
-		The input to a conformant model-free planning problem is 
+		The input to a safe model-free planning problem is 
 		the tuple $\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G}, \mathcal{T}}$
-		and the task is to generate a plan $\pi$  that is a solution to $\Pi$. We denote this conformant model-free planning problem as $\Pi_\mathcal{T}$. 
+		and the task is to generate a plan $\pi$  that is a solution to $\Pi$. 
+		We denote this safe model-free planning problem as $\Pi_\mathcal{T}$. 
 		\label{def:model-free-planning}
 	\end{definition}
 	
-	%\begin{definition}[Conformant Model-free planning] The input to a conformant model-free planning problem is a tuple $\tuple{\mathcal{X},s_\mathcal{I}, s_\mathcal{G}, \mathcal{T}}$,  where $\mathcal{X}$, $s_\mathcal{I}$, and $s_\mathcal{G}$ are the state variables, initial state, and goal, respectively, of an underlying planning problem, and $\mathcal{T}$ is the given set of trajectories. The task is to generate plan that is a solution to the underlying planning problem, i.e.,  a a sequence of action that , if is applied to $s_\mathcal{I}$, will result in a state that satisfies $s_\mathcal{G}$. \label{def:model-free-planning}\end{definition}
+	
 	
 	
 	% 1!!!!!!!!!!!!!
 	\section{Conservative Planning}
 	%We follow Walsh and Litman's approach
 	%We follow Wang's~\cite{wang1994learning,wang1995learning} approach for learning a STRIPS model from observation and interactions. 
-	To solve the conformant model-free planning problem, we propose to learn a conservative action model, and then use it to find sound plans.
+	To solve the safe model-free planning problem, we propose to learn a conservative action model, and then use it to find sound plans.
 	
 	Following prior work on learning action models~\cite{wang1995learning,wang1994learning,walsh2008efficientLearning}, we partition every observed trajectory $\tuple{s_1,a_1,s_2,\ldots,s_{n+1}}\in\mathcal{T}$ into a set of {\em action triplets}, where each action triplet is of the form $\langle s_i, a_i, s_{i+1}\rangle$. 
 	Let $\mathcal{T}(a)$ be all the action triplets for action $a$. 
@@ -317,15 +362,15 @@
 	
 	
 	
-	\section{Learning to Perform Model-Free Planning}
+	\section{Learning to Perform Safe Planning}
 	%[[Something about the impracticality of the solution above, and how we aim for a more general task, in which we want to maximize probability of success]]
-	In general, we cannot guarantee that {\em any finite number of trajectories} will suffice to obtain {\em precisely} the underlying action model. This is because, for example, if some action never appears in a trajectory, we may not know its effects; or, if an action is only used in a limited variety of states, it may be impossible to distinguish its preconditions. Consequently, we cannot guarantee a complete solution to the conformant model-free planning problem. However, as the number of trajectories increases, we can hope to learn enough of the actions accurately enough to be able to find plans for most goals in practice. This gives raise to a statistical view of the conformant model-free planning task (Definition~\ref{def:model-free-planning}) that follows the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}.  %is:
+	In general, we cannot guarantee that {\em any finite number of trajectories} will suffice to obtain {\em precisely} the underlying action model. This is because, for example, if some action never appears in a trajectory, we may not know its effects; or, if an action is only used in a limited variety of states, it may be impossible to distinguish its preconditions. Consequently, we cannot guarantee a complete solution to the model-free safe planning problem. However, as the number of trajectories increases, we can hope to learn enough of the actions accurately enough to be able to find plans for most goals in practice. This gives raise to a statistical view of the model-free safe planning task (Definition~\ref{def:model-free-planning}) that follows the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}.  %is:
 	%In this work, we follow the usual statistical view of learning, along the lines of Vapnik and Chervonenkis~\shortcite{vapnik1971} and Valiant~\shortcite{valiant1984}. The main task we consider is:
 	
-	\begin{definition}[Conformant Model-Free Learning-to-Plan] We suppose that there is an arbitrary, unknown (prior) probability distribution $D$ over triples of the form $\tuple{s_\mathcal{I}, s_\mathcal{G}, T}$, where $s_\mathcal{I}$ is a state, $s_\mathcal{G}$ is a goal condition, and $T$ is a trajectory that starts in $s_\mathcal{I}$ and ends in a state that satisfies $s_\mathcal{G}$, 
+	\begin{definition}[Safe Model-Free Learning-to-Plan] We suppose that there is an arbitrary, unknown (prior) probability distribution $D$ over triples of the form $\tuple{s_\mathcal{I}, s_\mathcal{G}, T}$, where $s_\mathcal{I}$ is a state, $s_\mathcal{G}$ is a goal condition, and $T$ is a trajectory that starts in $s_\mathcal{I}$ and ends in a state that satisfies $s_\mathcal{G}$, 
 		and all trajectories are applicable in a fixed planning domain $\mathcal{D}=\tuple{\mathcal{X}, \mathcal{O}}$. 
 		%defined for a set of propositions $P$ and set of actions $A$ with a fixed action model. 
-		In the conformant model-free learning-to-plan task, we are given a set of triplets $\tuple{s_\mathcal{I}^{(1)},s_\mathcal{G}^{(1)},T^{(1)}},\ldots,\tuple{s_\mathcal{I}^{(m)},s_\mathcal{G}^{(m)},T^{(m)}}$ drawn independently from $D$, 
+		In the safe model-free learning-to-plan task, we are given a set of triplets $\tuple{s_\mathcal{I}^{(1)},s_\mathcal{G}^{(1)},T^{(1)}},\ldots,\tuple{s_\mathcal{I}^{(m)},s_\mathcal{G}^{(m)},T^{(m)}}$ drawn independently from $D$, 
 		and a new \SAS{} planning problem $\Pi=\tuple{\mathcal{D}, s_\mathcal{I}, s_\mathcal{G}}$  
 		such that the initial state and goal condition $(s_\mathcal{I},G)$ are from some $(s_\mathcal{I},s_\mathcal{G},T)$ drawn from $D$. 
 		%The task is to either to output a plan for $\Pi$ or, with probability at most $\epsilon$, assert that no plan can be found.
@@ -338,9 +383,8 @@
 	
 	%\MEMO{Roni: I think that since $I$ and $G$ are drawn from some $(I,G,T)$ drawn from $D$ then $(I,G)$ must be a solveable instance. So we should say that the learned action model is sufficient to generate a solution for  the planning problem $(I,G)$ with probability at least $1-\epsilon$. I don't think we can say something about the probability that the problem is not solvable  as we did not have cases like that in the training set  and having such cases means the traninig set used a different  distribution than reality}
 	%\MEMO{Roni: Do we really need the distribution of $(I,G,T)$  and cannot assume only a distribution of ($I,G$)?  I think it will be cleaner to only talk about $D$ inthe proof of Theorem 1  and don't have it in the definition or theorem.}
-	We stress that $D$ is arbitrary, and in particular the conditional distribution
-	of trajectories given a start and goal state, $D(T|s_{\mathcal{I}},s_{\mathcal{G}})$, is completely 
-	arbitrary. For example, $D$ could be the distribution of trajectories obtained
+	We stress that $D$ is arbitrary, and thus  the conditional distribution
+	of trajectories given a start and goal state, $D(T|s_{\mathcal{I}},s_{\mathcal{G}})$, can also be any arbitrary distribution. For example, $D$ could be the distribution of trajectories obtained
 	by running some (unknown, sophisticated) planning algorithm on input $(s_{\mathcal{I}},s_{\mathcal{G}})$, or produced by hand by a human domain expert. 
 	More generally, the adversarial choice of $D$ in our model subsumes a model in which a trajectory $T(s_{\mathcal{I}},s_{\mathcal{G}})$ is nondeterministically and adversarially chosen to
 	be paired with the start state $s_{\mathcal{I}}$ and goal $s_{\mathcal{G}}$. 
@@ -353,14 +397,13 @@
 		Using the conservative model-free planner, 
 		it is sufficient to observe 
 		%$m>\frac{(2ln 2)|A|}{\epsilon}(|P|+\log |A|+\log\frac{2}{\delta})$
-		$m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$
-		trajectories to solve the conformant model-free learning-to-plan problem with probability $1-\delta$. 
+		$m\geq\frac{(2\ln  d)|A|}{\epsilon}(|\mathcal{X}|+\log\frac{2|A|}{\delta})$
+		trajectories to solve the safe model-free learning-to-plan problem with probability $1-\delta$. 
 		\label{the:pac-conformant}
 	\end{theorem}
 	%\begin{proof}
 	%\MEMO{Question \#1: There is a conceptual hop that I am missing. I understand that there is a distribution of start-goal pairs. But I don't understand the meaning of a distribution over trajectories. A trajectory is not something that follows some distribution, it is something that is computed by some planning process.}
-	\begin{proof}
-		{\bf Outline.} First, Lemma~\ref{lem:sufficientActions} shows 
+	{\bf Proof Outline.} First, Lemma~\ref{lem:sufficientActions} shows 
 		that the set of actions used by our conservative model-free planner ($A(\mathcal{T})$) 
 		is sufficient to solve a randomly drawn problem with high probability. 
 		Then, Lemma~\ref{lem:plan-existance} shows that 
@@ -429,15 +472,19 @@
 			Since the action model is $\epsilon$-adequate then with probability $1-\epsilon/2$ the learned preconditions are satisfied on all of the states in $T$. Thus, by a union bound, we find that with probability $1-\epsilon$, our planner could at least find $\mathcal{T}$. Hence it will find a trajectory from $s_\mathcal{I}$ to $s_\mathcal{G}$, as required. 
 		\end{proof}
 		
-		
+		\begin{lemma}
+            The action model used by our conservative model-free planner is $\epsilon$-adequate with probability at least $1-\delta/2$.
+			\label{lem:action-model-ok}
+		\end{lemma}
 		%In Theorem~\ref{the:safeness} we established that the action model used by our conservative model-free planner is safe. 
-		Finally, we argue that the action model used by our conservative model-free planner is $\epsilon$-adequate with probability at least $1-\delta/2$. 
+		\begin{proof}
+%		Finally, we argue that the action model used by our conservative model-free planner is $\epsilon$-adequate with probability at least $1-\delta/2$. 
 		Whether an action model is $\epsilon$-adequate or not depends on the assignment of preconditions to actions. 
-		Since there are $n$ state variables each with at most $d$ values, 
-		then there are $d^n$ possible assignments of preconditions for an individual action
-		and a total of $d^{n\cdot |A|}$ possible preconditions assignments for an action model . 
+		Since there are $|\mathcal{X}|$ state variables each with at most $d$ values, 
+		then there are $d^{|\mathcal{X}|}$ possible assignments of preconditions for an individual action
+		and a total of $d^{|\mathcal{X}|\cdot |A|}$ possible preconditions assignments for an action model . 
 		Let $BAD$ be the subset of these action model preconditions assignments that are not $\epsilon$-adequate. 
-		Clearly, $BAD$ has size of at most $d^{n\cdot |A|}$. 
+		Clearly, $BAD$ has size of at most $d^{|\mathcal{X}|\cdot |A|}$. 
 		
 		
 		Consider a particular assignment of preconditions in an $\epsilon$-inadequate action model $\mathcal{O}_{BAD}$. Since $\mathcal{O}_{BAD}$ is $\epsilon$-inadequate, 
@@ -448,7 +495,7 @@
 		the probability of having a state-action pair from that list 
 		in a trajectory drawn from $D$ is at least $\epsilon/2$. 
 		Thus, the probability that our algorithm will learn a particular preconditions assignment of an $\epsilon$-inadequate action model is at most $(1-\epsilon/2)^m$.
-		Since $m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})>\frac{2\ln d}{\epsilon}(|A|\cdot n+\log\frac{2}{\delta})$, then $(1-\epsilon/2)^m$ is smaller than 
+		Since $m\geq\frac{(2\ln  d)|A|}{\epsilon}(|\mathcal{X}|+\log\frac{2|A|}{\delta})>\frac{2\ln d}{\epsilon}(|A|\cdot |\mathcal{X}|+\log\frac{2}{\delta})$, then $(1-\epsilon/2)^m$ is smaller than 
 		
 		%\begin{equation}
 		%e^{-\frac{\epsilon}{2} \cdot m}\leq 
@@ -462,20 +509,21 @@
 		\begin{equation}
 		e^{-\frac{\epsilon}{2} \cdot m}
 		\leq 
-		e^{-(\ln d \cdot (|A|\cdot n+\log\frac{2}{\delta}))}
-		\leq e^{-\ln d \cdot |A|\cdot n}\cdot e^{-\ln  \frac{2}{\delta}}
+		e^{-(\ln d \cdot (|A|\cdot |\mathcal{X}|+\log\frac{2}{\delta}))}
+		\leq e^{-\ln d \cdot |A|\cdot |\mathcal{X}|}\cdot e^{-\ln  \frac{2}{\delta}}
 		%=\frac{\delta}{d^{n\cdot |A|}}
 		\end{equation}
-		which is at most $\frac{\delta}{2\cdot d^{n\cdot |A|}}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
+		which is at most $\frac{\delta}{2\cdot d^{|\mathcal{X}|\cdot |A|}}$. Thus, by a union bound over this set of inadequate assignments $BAD$, the probability that any inadequate assignment of preconditions could be output is at most $\delta/2$.
 		%We finally note that the algorithm cannot produce unsafe preconditions for $A(\mathcal{T})$: indeed, observe that the preconditions are satisfied for every action invoked in every trajectory obtained by the algorithm. Since the algorithm includes all of the literals that are satisfied on all of the states in which that action was invoked, in particular it includes all of the literals that actually appear in the precondition. 
 		Thus, with probability $1-\delta$, the algorithm indeed produces an assignment of preconditions that is neither unsafe for $A(\mathcal{T})$ nor inadequate for $A_\epsilon$, as needed.
+	
 	\end{proof}
 	
 	\subsection{Unsolvable Instances}
 	
 	The implication of Theorem~\ref{the:pac-conformant} is that by observing 
 	a number of trajectories that is linear in the number of actions and the number of state variables, 
-	we expect our conformant model-free planner to be complete with high probability, in the sense that if a solution exists it will be found. But what if some of the drawn problem instances are not solvable? 
+	we expect our safe model-free planner to be complete with high probability, in the sense that if a solution exists it will be found. But what if some of the drawn problem instances are not solvable? 
 
 \begin{table}
 	\centering
@@ -485,13 +533,13 @@
 		$\neg\solvable(\Pi)$	& 0 & 1 & $1-\mu$ \\ \hline
 		Marginals	& $\mu (1-\epsilon)$ & $1-\mu(1-\epsilon)$ &
 	\end{tabular}
-\caption{The table shows the priors, conditional probabilities, and marginals obtained with probability $1-\delta$ when using our conservative model-free planner when it is given $m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$ trajectories.}
+\caption{The table shows the priors, conditional probabilities, and marginals obtained with probability $1-\delta$ when using our conservative model-free planner when it is given $m\geq\frac{(2\ln  d)|A|}{\epsilon}(|\mathcal{X}|+\log\frac{2|A|}{\delta})$ trajectories.}
 \label{tab:probabilities}	
 \end{table}
 
 	\begin{corollary}
 		If the probability of drawing a solvable start-goal pair from $D$ is $\mu$ then it is sufficient to 
-		observe $m\geq\frac{(2\ln  d)|A|}{\epsilon}(n+\log\frac{2|A|}{\delta})$
+		observe $m\geq\frac{(2\ln  d)|A|}{\epsilon}(|\mathcal{X}|+\log\frac{2|A|}{\delta})$
 		trajectories (of solvable instances) to guarantee that with probability of at least $1-\delta$ our conservative model-free planner will solve a start-goal pair drawn from $D$ with probability at least $\mu\cdot(1-\epsilon)$ 
 \label{cor:unsolvable}
 	\end{corollary}
@@ -535,8 +583,11 @@ The first row shows the probabilities
 	Our work relates to several well-studied types of problems: planning under uncertainty, reinforcement learning, and domain modeling. 
 	Unlike common planning under uncertainty models such as MDPs and POMDPs, our uncertainty does not 
 	stem from the stochastic nature of the world or imperfect sensors, but from  not knowing the action model of the underlying planning problem. Unlike reinforcement learning, our task is to generate a plan that {\em must} work, and thus cannot rely on a trial-and-error approach to learn the domain and/or how to plan in it. 
-	Similarly, most prior work on learning a domain model in general or a STRIPS action model from observed trajectories, also involve some form of trial-and-error as well, interacting with environment to refine the learned model~\cite{mourao2012learning,wang1994learning,wang1994learning,walsh2008efficientLearning,levine2006explanation,jimenez2013integrating}. 
-	
+	Similarly, most prior work on learning a domain model in general 
+	or a STRIPS action model from observed trajectories, 
+	such as ARMS~\cite{yang2007learning} and LOCM~\cite{cresswell2013acquiring},
+	also involve some form of trial-and-error as well, interacting with environment to refine the learned model~\cite{mourao2012learning,wang1994learning,wang1994learning,walsh2008efficientLearning,levine2006explanation,jimenez2013integrating}. 
+
 	%DeJong~\shortcite{levine2006explanation} showed how to learn control operators  from background knowledge and experimentations. Jim{\'e}nez et al.~\shortcite{jimenez2013integrating} also studied how to integrate learning of planning operators and planning, including experimenting with planning rules that are probably correct Others interleaved planning and experimentation to 
 	
 	While we build on ideas from these prior works, our work is significantly different, as we demand that  the plan generated by the learned model {\em must} reach the goal, thus not allowing any form of trial-and-error. 
@@ -579,19 +630,25 @@ The first row shows the probabilities
 	
 	
 	\section{Conclusions}
-	This paper deals with a planning problem in which the planner agent has no knowledge about its actions. Instead of an action model, the planner is given a set of observed trajectories of successfully executed plans. 	In this setting we introduced the {\em conformant model-free planning} problem, in which the task is to find a plan that is guaranteed to reach the goal, i.e., there is no tolerance for execution failure. This type of problem is important in cases where failure is costly or in cases where the agent has no capability to replan during execution. 
+	This paper deals with a planning problem in which the planner agent has no knowledge about its actions. Instead of an action model, the planner is given a set of observed trajectories of successfully executed plans. 	In this setting we introduced the {\em safe model-free planning} problem, in which the task is to find a plan that is guaranteed to reach the goal, i.e., there is no tolerance for execution failure. This type of problem is important in cases where failure is costly or in cases where the agent has no capability to replan during execution. 
 	We showed how to use the given set of trajectories to learn
-	about the agent's actions, bounding the set of predicates in the actions'  preconditions and effects. Then, we proposed a conservative approach to solve the conformant model-free problem that is based on a translation to a classical planning problem. This solution is sound but is not complete, as it may fail to find a solution even if one exists. However, we prove that under some assumptions the likelihood of finding a solution with this approach grows linearly with the number of predicates and quasi-linearly with the number of actions. 
+	about the agent's actions, bounding the set of predicates in the actions'  preconditions and effects. Then, we proposed a conservative approach to solve the safe model-free problem that is based on a translation to a classical planning problem. This solution is sound but is not complete, as it may fail to find a solution even if one exists. However, we prove that under some assumptions the likelihood of finding a solution with this approach grows linearly with the number of predicates and quasi-linearly with the number of actions. 
 	
 	
-	Future directions for conformant model-free planning include studying how to consider richer underlying planning models including parametrized actions, conditional effects, stochastic action outcomes, and partial observability. While some of these more complex action models can be compiled away (e.g., a problem with conditional effects can be compiled to a problem without conditional effects~\cite{nebel2000compilability}), the resulting problem can be significantly larger.   
+	Future directions for safe model-free planning include studying how to consider richer underlying planning models including parametrized actions, conditional effects, stochastic action outcomes, and partial observability. While some of these more complex action models can be compiled away (e.g., a problem with conditional effects can be compiled to a problem without conditional effects~\cite{nebel2000compilability}), the resulting problem can be significantly larger. A particularly interesting direction is how to learn there lifted action model, i.e., 
+	what can be learned from a trajectory 
+	with an action $a(x)$ on the action 
+	model of $a(y)$, where $a$ is a parameterized action and $x$ and $y$ are different values for the same parameter.
+	
 	
 	
 	%Another future direction will consider cases where the given planning problem is not solvable.
 	%Note that we cannot distinguish between cases where our planner outputted that no solution has been found from cases where indeed there are no solution. Future work can study and analyze the probability of such cases.
 	
 	\section*{Acknowledgements}
-	B.~Juba was partially supported by an AFOSR Young Investigator Award.
+	B.~Juba was partially supported by an AFOSR Young Investigator Award. 
+	R.~Stern was partially supported by the Cyber Security Research Center 
+	at BGU. 
 	
 	%% The file named.bst is a bibliography style file for BibTeX 0.99c
 	\bibliographystyle{named}
