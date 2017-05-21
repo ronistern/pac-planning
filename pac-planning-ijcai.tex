@@ -382,7 +382,7 @@ The key difference between the model learning we propose and these hardness resu
 	\end{definition}
 	
 	
-	
+	\subsubsection{Remarks on the task formulation}
 	%\MEMO{Roni: I think that since $I$ and $G$ are drawn from some $(I,G,T)$ drawn from $D$ then $(I,G)$ must be a solveable instance. So we should say that the learned action model is sufficient to generate a solution for  the planning problem $(I,G)$ with probability at least $1-\epsilon$. I don't think we can say something about the probability that the problem is not solvable  as we did not have cases like that in the training set  and having such cases means the traninig set used a different  distribution than reality}
 	%\MEMO{Roni: Do we really need the distribution of $(I,G,T)$  and cannot assume only a distribution of ($I,G$)?  I think it will be cleaner to only talk about $D$ inthe proof of Theorem 1  and don't have it in the definition or theorem.}
 	We stress that $D$ is arbitrary, and thus  the conditional distribution
@@ -393,7 +393,9 @@ The key difference between the model learning we propose and these hardness resu
 	(Indeed, the distributions used in such a case satisfy the stronger restriction that $D(T|s_{\mathcal{I}},s_{\mathcal{G}})$ produces a deterministic outcome $T(s_{\mathcal{I}},s_{\mathcal{G}})$, which does not necessarily hold in our model.)
 	%We note that this task is conservative in the sense that when an algorithm solving it outputs a plan, the plan is required to be correct. The algorithm may only make errors by failing to find a plan when one exists. %\section{Theoretical Guarantees and Limitations} How many trajectories do we need to guarantee that every plan can be generated?
 	
-	We also note that our conservative model-free planner does not actually require knowledge of the goals $s_{\mathcal{G}}$ associated with the trajectories drawn from $D$. But, such a distribution over goals is a central feature in our notion of ``approximate completeness,'' as we now discuss.
+	We also note that our conservative model-free planner does not actually require knowledge of the goals $s_{\mathcal{G}}$ associated with the trajectories drawn from $D$. Thus, our approach actually solves a more demanding task that does not provide the goals to the learning algorithm. But, such a distribution over goals is nevertheless a central feature in our notion of ``approximate completeness,'' and features prominently in the analysis as we discuss next.
+	
+	\subsubsection{Analysis of learning}
 	A key question is how our certainty that a plan can be generated for a new start and goal state grows with the number of trajectories. Let $\log$ and $\ln$ denote $\log_2$ and $\log_e$, respectively, and let $d$ denote the largest number of values
 	for a state variable. 
 	%Since there are $n$ state variables each with at most $d$ values, 
@@ -432,7 +434,7 @@ The key difference between the model learning we propose and these hardness resu
 			Since the observed trajectories $\mathcal{T}$ are drawn independently from $D$ we have that the probability that $a\notin A(\mathcal{T})$ is
 			$(1-\frac{\epsilon}{2|A|})^m\leq e^{-\frac{\epsilon\cdot m}{2|A|}}$, 
 			using the inequality $1-x\leq e^{-x}$. 
-			Since we assume in Theorem~\ref{the:pac-conformant} that $m>\frac{(2\ln 2)|A|}{\epsilon}(n+\log |A|+\log\frac{2}{\delta})$
+			Since we assume in Theorem~\ref{the:pac-conformant} that $m\geq\frac{(2\ln d)|A|}{\epsilon}(|\mathcal{X}|+\log\frac{2|A|}{\delta})$
 			which is larger than $\frac{(2\ln 2)|A|}{\epsilon}\log\frac{2|A|}{\delta}$, 
 			we have that the probability that $a\notin A(\mathcal{T})$ is at most 
 			\begin{equation}
@@ -447,7 +449,7 @@ The key difference between the model learning we propose and these hardness resu
 		all the ``useful'' actions, i.e., the actions used in many trajectories. However, we may have learned 
 		preconditions for these actions that are too conservative, 
 		preventing the planner from finding a plan even if one exists. 
-		The next definition defines an action model property that states that this does not occur frequently. 
+		We next define a property of action models that states that this does not occur frequently. 
 		
 		% the execution of actions in states where they in fact can be executed. Due to Theorem~\ref{the:safeness} we know that observed actions will be associated with a safe action model. Still, the preconditions learned for the observed actions may be too restrictive, i.e., prevent the execution of actions in states where they in fact can be executed. 
 		
@@ -488,7 +490,7 @@ The key difference between the model learning we propose and these hardness resu
 		then there are $d^{|\mathcal{X}|}$ possible assignments of preconditions for an individual action
 		and a total of $d^{|\mathcal{X}|\cdot |A|}$ possible preconditions assignments for an action model . 
 		Let $BAD$ be the subset of these action model preconditions assignments that are not $\epsilon$-adequate. 
-		Clearly, $BAD$ has size of at most $d^{|\mathcal{X}|\cdot |A|}$. 
+		Clearly, $BAD$ has size at most $d^{|\mathcal{X}|\cdot |A|}$. 
 		
 		
 		Consider a particular assignment of preconditions in an $\epsilon$-inadequate action model $\mathcal{O}_{BAD}$. Since $\mathcal{O}_{BAD}$ is $\epsilon$-inadequate, 
@@ -522,7 +524,7 @@ The key difference between the model learning we propose and these hardness resu
 	\subsection{Unsolvable Instances}
 	
 	The implication of Theorem~\ref{the:pac-conformant} is that by observing 
-	a number of trajectories that is linear in the number of actions and the number of state variables, 
+	a number of trajectories that is quasi-linear in the number of actions and the number of state variables, 
 	we expect our safe model-free planner to be complete with high probability, in the sense that if a solution exists it will be found. But what if some of the drawn problem instances are not solvable? 
 
 \begin{table}
@@ -581,12 +583,12 @@ The first row shows the probabilities
 	%This work focuses on a simpler setting in which there is full state observability, actions have deterministic effects, and there are no conditional effects. Jim{\'e}nez et al.~\shortcite{jimenez2012review} review the state-of-the-art in learning action models for this setting and other more complex settings (partial observability and non-deterministic action outcomes).
 	
 	Our work relates to several well-studied types of problems: planning under uncertainty, reinforcement learning, and domain model learning. 
-	\subsubsection*{Planning under uncertainty} In common models for planning under uncertainty models, 
-	such as Markov Decision Problem (MDP) and Partially Observable MDP (POMDP), the uncertainty stems from the stochastic nature of the world or from imperfect sensors that prevent full observability of the agent's state. Our setting is different in that our uncertainty only stems from not knowing the agent's action model. 
+	\paragraph{Planning under uncertainty.} In common models for planning under uncertainty, 
+	such as Markov Decision Problems (MDP) and Partially Observable MDPs (POMDP), the uncertainty stems from the stochastic nature of the world or from imperfect sensors that prevent full observability of the agent's state. Our setting is different in that our uncertainty only stems from not knowing the agent's action model. 
 	
-	\subsubsection*{Reinforcment learning} Reinforcement learning algorithms learn how to act by interacting with the environment. Thus, they are designed for a trial-and-error approach to learn the domain and/or how to plan in it. Our task is to generate a plan that {\em must} work, so a trial-and-error approach is not relevant. 
+	\paragraph{Reinforcement learning.} Reinforcement learning algorithms learn how to act by interacting with the environment. Thus, they are designed for a trial-and-error approach to learn the domain and/or how to plan in it. Our task is to generate a plan that {\em must} work, so a trial-and-error approach is not sufficient. 
 	
-	\subsubsection*{Domain model learning}
+	\paragraph{Domain model learning.}
 	 Most prior work on learning a domain model in general or a STRIPS action model from observed trajectories, such as ARMS~\cite{yang2007learning} and LOCM~\cite{cresswell2013acquiring}, learn approximate models that do not guarantee safety. Hence, such work generally also involves some form of trial-and-error as well, iteratively requesting more example trajectories or interacting directly with the environment to refine the learned model~\cite{mourao2012learning,wang1994learning,wang1994learning,walsh2008efficientLearning,levine2006explanation,jimenez2013integrating}.
 	%	While we build on ideas from these prior works, our work is significantly different, as we demand that  the plan generated by the learned model {\em must} reach the goal, thus not allowing any form of trial-and-error. 
 	%While trial-and-error is a reasonable approach in some cases, especially if the agent can re-plan during execution, it is unacceptable in other cases, e.g., when failure corresponds to physical harm to the acting agent or the agent has no re-planning capabilities.  
